@@ -46,6 +46,10 @@ public class HueListener implements PHSDKListener {
         // Use the PHMessageType to check which cache was updated.
         if (notify.contains(PHMessageType.LIGHTS_CACHE_UPDATED)) {
             logger.trace("Received Lights onCacheUpdated event");
+
+            // replace states
+            Map<String, PHLightState> newStates = new HashMap<>();
+
             // Loop and compare light's state, see which one has changed
             List<PHLight> lights = this.bridge.getResourceCache().getAllLights();
             for (PHLight light : lights) {
@@ -62,8 +66,10 @@ public class HueListener implements PHSDKListener {
                 } else if (lastState.isReachable() && currentState.isReachable() && !lastState.equals(currentState)) {
                     logger.debug("Device state change Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                 }
-                this.states.put(light.getIdentifier(), currentState);   // always save the latest state
+                newStates.put(light.getIdentifier(), currentState);
             }
+
+            this.states = newStates;
         }
     }
 

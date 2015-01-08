@@ -21,6 +21,8 @@ public class HueAdapter {
     // Logger
     private static final Logger logger = LoggerFactory.getLogger(HueAdapter.class);
 
+    public static String gatewayId;
+
     public static void main(String args[]) {
         // Gateway's Device Id
         EthernetAddress ea = EthernetAddress.fromInterface();
@@ -29,7 +31,7 @@ public class HueAdapter {
             System.exit(1);
         }
         NameBasedGenerator generator = Generators.nameBasedGenerator(NameBasedGenerator.NAMESPACE_URL);
-        String gatewayId = generator.generate("https://github.com/longkerdandy/evo-gateway?mac=" + ea.toString()).toString();
+        gatewayId = generator.generate("https://github.com/longkerdandy/evo-gateway?mac=" + ea.toString()).toString();
         logger.trace("Gateway's device id is {}", gatewayId);
 
         // hue (sdk) instance
