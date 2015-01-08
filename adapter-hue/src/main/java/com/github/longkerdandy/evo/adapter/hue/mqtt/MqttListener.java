@@ -1,4 +1,4 @@
-package com.github.longkerdandy.evo.adapter.hue.mq;
+package com.github.longkerdandy.evo.adapter.hue.mqtt;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Message Queue (MQTT) Listener
  */
-public class MqListener {
+public class MqttListener {
 
     // Logger
-    private static final Logger logger = LoggerFactory.getLogger(MqListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(MqttListener.class);
 
     private MqttClient client;              // Paho MQTT Client
-    private MqttConnectOptions conOpt;     // Paho MQTT Connect Options
+    private MqttConnectOptions conOpt;      // Paho MQTT Connect Options
 
     /**
      * Constructor
@@ -26,21 +26,20 @@ public class MqListener {
      * @param brokerUri MQTT Broker Address
      * @param clientId  MQTT Client Id
      */
-    public MqListener(String brokerUri, String clientId) {
+    public MqttListener(String brokerUri, String clientId) {
         // use MemoryPersistence
         MemoryPersistence persistence = new MemoryPersistence();
         try {
-            // Construct the object that contains connection parameters
+            // construct the object that contains connection parameters
             // such as clean session and LWAT
             this.conOpt = new MqttConnectOptions();
             this.conOpt.setCleanSession(false);
 
-            // Construct the MqttClient instance
+            // construct the MqttClient instance
             this.client = new MqttClient(brokerUri, clientId, persistence);
 
-            // Set this wrapper as the callback handler
+            // set this wrapper as the callback handler
             this.client.setCallback(null);
-
         } catch (MqttException e) {
             logger.error("Create new MqListener with exception: {}", ExceptionUtils.getMessage(e));
         }
@@ -52,8 +51,10 @@ public class MqListener {
      * @throws MqttException
      */
     public void connect() throws MqttException {
-        this.client.connect(this.conOpt);
-        logger.debug("Connected to the broker {}", client.getServerURI());
+        if (!this.client.isConnected()) {
+            this.client.connect(this.conOpt);
+            logger.debug("Connected to the broker {}", this.client.getServerURI());
+        }
     }
 
     /**
@@ -66,9 +67,9 @@ public class MqListener {
      */
     public void publish(String topicName, int qos, byte[] payload) throws MqttException {
 
-        // Connect to broker if necessary
+        // if not connected, drop the action
         if (!this.client.isConnected()) {
-            this.client.connect();
+            return;
         }
 
         // Create and configure a message
@@ -93,9 +94,9 @@ public class MqListener {
      */
     public void subscribe(String topicName, int qos) throws MqttException {
 
-        // Connect to broker if necessary
+        // if not connected, drop the action
         if (!this.client.isConnected()) {
-            this.client.connect();
+            return;
         }
 
         // Subscribe to the requested topic

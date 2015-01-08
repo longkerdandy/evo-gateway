@@ -55,7 +55,7 @@ public class HueListener implements PHSDKListener {
             for (PHLight light : lights) {
                 PHLightState currentState = light.getLastKnownLightState();
                 PHLightState lastState = this.states.get(light.getIdentifier());
-                if (lastState == null ) {
+                if (lastState == null) {
                     if (currentState.isReachable()) {
                         logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                     }
