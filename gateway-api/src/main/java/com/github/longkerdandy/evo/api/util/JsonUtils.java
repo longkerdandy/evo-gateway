@@ -15,6 +15,7 @@ public class JsonUtils {
 
     static {
         ObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         ObjectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         ObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
