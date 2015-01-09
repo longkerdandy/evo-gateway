@@ -1,5 +1,10 @@
 package com.github.longkerdandy.evo.adapter.hue.mqtt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.longkerdandy.evo.adapter.hue.bridge.HueListener;
+import com.github.longkerdandy.evo.api.message.Message;
+import com.github.longkerdandy.evo.api.mqtt.Topic;
+import com.github.longkerdandy.evo.api.util.JsonUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -19,6 +24,8 @@ public class MqttListener {
 
     private MqttClient client;              // Paho MQTT Client
     private MqttConnectOptions conOpt;      // Paho MQTT Connect Options
+
+    private HueListener hueListener;        // Hue Listener instance
 
     /**
      * Constructor
@@ -45,6 +52,10 @@ public class MqttListener {
         }
     }
 
+    public void setHueListener(HueListener hueListener) {
+        this.hueListener = hueListener;
+    }
+
     /**
      * Connect to broker
      *
@@ -59,27 +70,31 @@ public class MqttListener {
 
     /**
      * Performs a single publish
+     * Since Hue is a device, it will always publish to topic "devices"
      *
-     * @param topicName the topic to publish to
      * @param qos       the qos to publish at
      * @param payload   the payload of the message to publish
      * @throws MqttException
      */
-    public void publish(String topicName, int qos, byte[] payload) throws MqttException {
+    public void publish(int qos, Message payload) throws MqttException, JsonProcessingException {
 
         // if not connected, drop the action
         if (!this.client.isConnected()) {
             return;
         }
 
+        // write to json bytes
+        byte[] bytes = JsonUtils.ObjectMapper.writeValueAsBytes(payload);
+
         // Create and configure a message
-        MqttMessage message = new MqttMessage(payload);
+        MqttMessage message = new MqttMessage(bytes);
         message.setQos(qos);
 
         // Send the message to the server, control is not returned until
         // it has been delivered to the server meeting the specified
         // quality of service.
-        this.client.publish(topicName, message);
+        this.client.publish(Topic.DEIVCES, message);
+        logger.debug("Successful publish message {} from {}", payload.getMsgType(), payload.getFrom());
     }
 
     /**

@@ -1,5 +1,12 @@
 package com.github.longkerdandy.evo.adapter.hue.bridge;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.longkerdandy.evo.adapter.hue.message.HueMessageFactory;
+import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
+import com.github.longkerdandy.evo.api.message.ConnectMessage;
+import com.github.longkerdandy.evo.api.message.DisconnectMessage;
+import com.github.longkerdandy.evo.api.message.Message;
+import com.github.longkerdandy.evo.api.protocol.QoS;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHHueSDK;
 import com.philips.lighting.hue.sdk.PHMessageType;
@@ -9,6 +16,8 @@ import com.philips.lighting.model.PHBridge;
 import com.philips.lighting.model.PHHueParsingError;
 import com.philips.lighting.model.PHLight;
 import com.philips.lighting.model.PHLightState;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +35,17 @@ public class HueListener implements PHSDKListener {
 
     private final String userName;              // User Name, should be Gateway's Device Id
     private final PHHueSDK hue;                 // HueSDK instance
+    private final MqttListener mqttListener;    // MQTT Listener instance
     private PHAccessPoint bridgeAddress;        // Current Hue Bridge Address
     private PHBridge bridge;                    // Current Hue Bridge Object
     private PHHeartbeatManager hb;              // Heartbeat runs at regular intervals and update the Bridge Resources cache.
     private boolean isConnected;                // Is connected to the bridge
     private Map<String, PHLightState> states;   // Light Id : State Mapping
 
-    public HueListener(String userName, PHHueSDK hue) {
+    public HueListener(String userName, PHHueSDK hue, MqttListener mqttListener) {
         this.userName = userName;
         this.hue = hue;
+        this.mqttListener = mqttListener;
         this.hb = PHHeartbeatManager.getInstance();
         this.states = new HashMap<>();
     }
@@ -58,11 +69,20 @@ public class HueListener implements PHSDKListener {
                 if (lastState == null) {
                     if (currentState.isReachable()) {
                         logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
+                        // publish message
+                        Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
+                        tryPublish(QoS.LEAST_ONCE , msg);
                     }
                 } else if (lastState.isReachable() && !currentState.isReachable()) {
                     logger.debug("Device offline Light {}", light.getIdentifier());
+                    // publish message
+                    Message<DisconnectMessage> msg = HueMessageFactory.newDisconnectMessage(light);
+                    tryPublish(QoS.LEAST_ONCE , msg);
                 } else if (!lastState.isReachable() && currentState.isReachable()) {
                     logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
+                    // publish message
+                    Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
+                    tryPublish(QoS.LEAST_ONCE , msg);
                 } else if (lastState.isReachable() && currentState.isReachable() && !lastState.equals(currentState)) {
                     logger.debug("Device state change Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                 }
@@ -87,9 +107,11 @@ public class HueListener implements PHSDKListener {
             PHLightState lightState = light.getLastKnownLightState();
             // save id : state mapping
             this.states.put(light.getIdentifier(), lightState);
-
+            // publish message if light is online
             if (lightState.isReachable()) {
                 logger.debug("Device online Light {} hue:{}", light.getIdentifier(), lightState.getHue());
+                Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
+                tryPublish(QoS.LEAST_ONCE , msg);
             }
         }
     }
@@ -143,5 +165,22 @@ public class HueListener implements PHSDKListener {
     @Override
     public void onParsingErrors(List<PHHueParsingError> list) {
         logger.trace("Received onParsingErrors event");
+    }
+
+
+    /**
+     * Try to publish message to mqtt topic
+     *
+     * @param qos     QoS
+     * @param payload Payload
+     */
+    protected void tryPublish(int qos, Message payload) {
+        try {
+            this.mqttListener.publish(qos, payload);
+        } catch (MqttException e) {
+            logger.warn("MQTT publish exception: {}", ExceptionUtils.getMessage(e));
+        } catch (JsonProcessingException e) {
+            logger.error("Json process exception: {}", ExceptionUtils.getMessage(e));
+        }
     }
 }

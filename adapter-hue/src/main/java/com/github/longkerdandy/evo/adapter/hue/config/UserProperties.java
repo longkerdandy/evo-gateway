@@ -1,4 +1,4 @@
-package com.github.longkerdandy.evo.adapter.hue.prop;
+package com.github.longkerdandy.evo.adapter.hue.config;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

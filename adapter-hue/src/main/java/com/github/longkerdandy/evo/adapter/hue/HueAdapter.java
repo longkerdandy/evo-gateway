@@ -5,7 +5,6 @@ import com.github.longkerdandy.evo.adapter.hue.bridge.HueSeeker;
 import com.github.longkerdandy.evo.adapter.hue.constant.ID;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttGuard;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
-import com.github.longkerdandy.evo.adapter.hue.prop.UserProperties;
 import com.philips.lighting.hue.sdk.PHBridgeSearchManager;
 import com.philips.lighting.hue.sdk.PHHueSDK;
 import org.slf4j.Logger;
@@ -25,12 +24,20 @@ public class HueAdapter {
         // Gateway's Device Id
         String gatewayId = ID.getGatewayId();
 
+        // register mqtt listener to the broker
+        MqttListener mqttListener = new MqttListener("tcp://localhost:1883", ID.getAdapterId());
+
+        // starts a MQTT Listener Guard thread
+        // try to re-connect to the mqtt broker if connection lost
+        MqttGuard guard = new MqttGuard(mqttListener);
+        Timer timerMqtt = new Timer(true);
+        timerMqtt.scheduleAtFixedRate(guard, 0, 30 * 1000); // 30s
+
         // hue (sdk) instance
         PHHueSDK hue = PHHueSDK.getInstance();
-        // load properties
-        UserProperties.loadProperties();
         // register the PHSDKListener to receive callbacks from the bridge
-        hue.getNotificationManager().registerSDKListener(new HueListener(gatewayId, hue));
+        HueListener hueListener = new HueListener(gatewayId, hue, mqttListener);
+        hue.getNotificationManager().registerSDKListener(hueListener);
 
         // starts a Hue Bridge Seeker thread
         // UPNP/Portal/IP search takes around 10 seconds
@@ -40,13 +47,7 @@ public class HueAdapter {
         Timer timerHue = new Timer(true);
         timerHue.scheduleAtFixedRate(seeker, 0, 30 * 1000); // 30s
 
-        // register mqtt listener to the broker
-        MqttListener mqtt = new MqttListener("tcp://localhost:1883", ID.getAdapterId());
-
-        // starts a MQTT Listener Guard thread
-        // try to re-connect to the mqtt broker if connection lost
-        MqttGuard guard = new MqttGuard(mqtt);
-        Timer timerMqtt = new Timer(true);
-        timerMqtt.scheduleAtFixedRate(guard, 0, 30 * 1000); // 30s
+        // set back mqtt listener's reference
+        mqttListener.setHueListener(hueListener);
     }
 }

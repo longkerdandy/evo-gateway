@@ -3,6 +3,9 @@ version = '1.0.0'
 
 // Dependencies
 dependencies {
+    // Api
+    compile project(':gateway-api')
+
     // PhilipsHue Java SDK
     compile files('libs/huelocalsdk.jar')
     compile files('libs/huesdkresources.jar')
