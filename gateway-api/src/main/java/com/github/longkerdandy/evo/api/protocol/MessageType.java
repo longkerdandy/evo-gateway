@@ -6,7 +6,9 @@ package com.github.longkerdandy.evo.api.protocol;
 @SuppressWarnings("unused")
 public class MessageType {
 
-    public static final String CONNECT = "connect";
-    public static final String CONNACK = "connack";
-    public static final String DISCONNECT = "disconnect";
+    public static final String ONLINE = "online";
+    public static final String ONLACK = "onlack";
+    public static final String OFFLINE = "offline";
+    public static final String TRIGGER = "trigger";
+    public static final String ACTION = "action";
 }

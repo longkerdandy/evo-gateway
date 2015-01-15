@@ -1,8 +1,9 @@
 package com.github.longkerdandy.evo.api.message;
 
 /**
- * Disconnect Message
+ * Offline Message
  * Try to send this message when device disconnecting from the Cloud
  */
-public class DisconnectMessage {
+@SuppressWarnings("unused")
+public class OfflineMessage {
 }

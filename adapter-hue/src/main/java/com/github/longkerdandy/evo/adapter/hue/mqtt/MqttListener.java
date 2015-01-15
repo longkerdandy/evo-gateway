@@ -72,8 +72,8 @@ public class MqttListener {
      * Performs a single publish
      * Since Hue is a device, it will always publish to topic "devices"
      *
-     * @param qos       the qos to publish at
-     * @param payload   the payload of the message to publish
+     * @param qos     the qos to publish at
+     * @param payload the payload of the message to publish
      * @throws MqttException
      */
     public void publish(int qos, Message payload) throws MqttException, JsonProcessingException {
@@ -93,7 +93,7 @@ public class MqttListener {
         // Send the message to the server, control is not returned until
         // it has been delivered to the server meeting the specified
         // quality of service.
-        this.client.publish(Topic.DEIVCES, message);
+        this.client.publish(Topic.DEVICES, message);
         logger.debug("Successful publish message {} from {}", payload.getMsgType(), payload.getFrom());
     }
 

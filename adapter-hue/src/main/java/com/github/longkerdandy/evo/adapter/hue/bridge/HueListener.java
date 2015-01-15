@@ -3,9 +3,9 @@ package com.github.longkerdandy.evo.adapter.hue.bridge;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.longkerdandy.evo.adapter.hue.message.HueMessageFactory;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
-import com.github.longkerdandy.evo.api.message.ConnectMessage;
-import com.github.longkerdandy.evo.api.message.DisconnectMessage;
 import com.github.longkerdandy.evo.api.message.Message;
+import com.github.longkerdandy.evo.api.message.OfflineMessage;
+import com.github.longkerdandy.evo.api.message.OnlineMessage;
 import com.github.longkerdandy.evo.api.protocol.QoS;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHHueSDK;
@@ -70,19 +70,19 @@ public class HueListener implements PHSDKListener {
                     if (currentState.isReachable()) {
                         logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                         // publish message
-                        Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
-                        tryPublish(QoS.LEAST_ONCE , msg);
+                        Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                        tryPublish(QoS.LEAST_ONCE, msg);
                     }
                 } else if (lastState.isReachable() && !currentState.isReachable()) {
                     logger.debug("Device offline Light {}", light.getIdentifier());
                     // publish message
-                    Message<DisconnectMessage> msg = HueMessageFactory.newDisconnectMessage(light);
-                    tryPublish(QoS.LEAST_ONCE , msg);
+                    Message<OfflineMessage> msg = HueMessageFactory.newOfflineMessage(light);
+                    tryPublish(QoS.LEAST_ONCE, msg);
                 } else if (!lastState.isReachable() && currentState.isReachable()) {
                     logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                     // publish message
-                    Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
-                    tryPublish(QoS.LEAST_ONCE , msg);
+                    Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                    tryPublish(QoS.LEAST_ONCE, msg);
                 } else if (lastState.isReachable() && currentState.isReachable() && !lastState.equals(currentState)) {
                     logger.debug("Device state change Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                 }
@@ -110,20 +110,20 @@ public class HueListener implements PHSDKListener {
             // publish message if light is online
             if (lightState.isReachable()) {
                 logger.debug("Device online Light {} hue:{}", light.getIdentifier(), lightState.getHue());
-                Message<ConnectMessage> msg = HueMessageFactory.newConnectMessage(light);
-                tryPublish(QoS.LEAST_ONCE , msg);
+                Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                tryPublish(QoS.LEAST_ONCE, msg);
             }
         }
     }
 
     @Override
     public void onAuthenticationRequired(PHAccessPoint phAccessPoint) {
-        logger.trace("Received onAuthenticationRequired event");
+        logger.trace("Received onAuthenticationRequired event from {}", phAccessPoint.getIpAddress());
     }
 
     @Override
     public void onAccessPointsFound(List<PHAccessPoint> bridgeAddress) {
-        // logger.trace("Received onAccessPointsFound event");
+        // logger.trace("Received onAccessPointsFound event from {} bridges", bridgeAddress.size());
         // Handle your bridge search results here.
         // Typically if multiple results are returned you will want to display them in a list and let the user select their bridge.
         // If one is found you may opt to connect automatically to that bridge.
@@ -147,7 +147,7 @@ public class HueListener implements PHSDKListener {
 
     @Override
     public void onError(int i, String s) {
-        logger.trace("Received onError event");
+        logger.trace("Received onError event: {} {}", i, s);
     }
 
     @Override
@@ -158,13 +158,16 @@ public class HueListener implements PHSDKListener {
 
     @Override
     public void onConnectionLost(PHAccessPoint phAccessPoint) {
-        logger.trace("Received onConnectionLost event");
+        logger.trace("Received onConnectionLost event from {}", phAccessPoint.getIpAddress());
         this.isConnected = false;
     }
 
     @Override
     public void onParsingErrors(List<PHHueParsingError> list) {
         logger.trace("Received onParsingErrors event");
+        for (PHHueParsingError error : list) {
+            logger.trace("ParsingError: {}", error.getMessage());
+        }
     }
 
 

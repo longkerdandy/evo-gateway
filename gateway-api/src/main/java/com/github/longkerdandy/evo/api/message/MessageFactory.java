@@ -35,29 +35,46 @@ public class MessageFactory {
     }
 
     /**
-     * Create a new Message<ConnectMessage>
+     * Create a new Message<OnlineMessage>
      *
      * @param from        Device ID (who send this message)
      * @param description Device's Description Id
      * @param attributes  Device current Attributes
-     * @return Message<ConnectMessage>
+     * @return Message<OnlineMessage>
      */
-    public static Message<ConnectMessage> newConnectMessage(String from, String description, Map<String, Object> attributes) {
-        ConnectMessage connect = new ConnectMessage();
-        connect.setProtocolVersion(Protocol.VERSION_1_0);       // Protocol Version
-        connect.setDescription(description);                    // Description Id
-        connect.setAttributes(attributes);                      // Attributes
-        return newMessage(MessageType.CONNECT, from, QoS.LEAST_ONCE, connect);
+    public static Message<OnlineMessage> newOnlineMessage(String from, String description, Map<String, Object> attributes) {
+        OnlineMessage online = new OnlineMessage();
+        online.setPv(Protocol.VERSION_1_0);     // Protocol Version
+        online.setDescId(description);          // Description Id
+        online.setAttributes(attributes);       // Attributes
+        return newMessage(MessageType.ONLINE, from, QoS.LEAST_ONCE, online);
     }
 
     /**
-     * Create a new Message<DisconnectMessage>
+     * Create a new Message<OfflineMessage>
      *
-     * @param from        Device ID (who send this message)
-     * @return Message<DisconnectMessage>
+     * @param from Device ID (who send this message)
+     * @return Message<OfflineMessage>
      */
-    public static Message<DisconnectMessage> newDisconnectMessage(String from) {
-        DisconnectMessage disconnect = new DisconnectMessage();
-        return newMessage(MessageType.DISCONNECT, from, QoS.MOST_ONCE, disconnect);
+    public static Message<OfflineMessage> newOfflineMessage(String from) {
+        OfflineMessage disconnect = new OfflineMessage();
+        return newMessage(MessageType.OFFLINE, from, QoS.MOST_ONCE, disconnect);
+    }
+
+    /**
+     * Create a new Message<TriggerMessage>
+     *
+     * @param from           Device ID (who send this message)
+     * @param triggerId      Trigger Id
+     * @param overridePolicy Attributes Override Policy
+     * @param attributes     Attributes
+     * @return Message<TriggerMessage>
+     */
+    public static Message<TriggerMessage> newTriggerMessage(String from, String triggerId, int overridePolicy, Map<String, Object> attributes) {
+        TriggerMessage trigger = new TriggerMessage();
+        trigger.setTriggerId(triggerId);
+        trigger.setOverridePolicy(overridePolicy);
+        trigger.setAttributes(attributes);
+        return newMessage(MessageType.TRIGGER, from, QoS.LEAST_ONCE, trigger);
     }
 }

@@ -2,10 +2,8 @@ package com.github.longkerdandy.evo.adapter.hue.message;
 
 import com.github.longkerdandy.evo.adapter.hue.constant.Description;
 import com.github.longkerdandy.evo.adapter.hue.constant.ID;
-import com.github.longkerdandy.evo.api.message.ConnectMessage;
-import com.github.longkerdandy.evo.api.message.DisconnectMessage;
-import com.github.longkerdandy.evo.api.message.Message;
-import com.github.longkerdandy.evo.api.message.MessageFactory;
+import com.github.longkerdandy.evo.api.message.*;
+import com.github.longkerdandy.evo.api.protocol.OverridePolicy;
 import com.philips.lighting.model.PHLight;
 
 import java.util.HashMap;
@@ -17,13 +15,50 @@ import java.util.Map;
 public class HueMessageFactory {
 
     /**
-     * Create a new Message<ConnectMessage> for specific Hue Light
+     * Create a new Message<OnlineMessage> for specific Hue Light
      *
      * @param light Hue Light
-     * @return Message<ConnectMessage>
+     * @return Message<OnlineMessage>
      */
-    public static Message<ConnectMessage> newConnectMessage(PHLight light) {
-        // construct attributes
+    public static Message<OnlineMessage> newOnlineMessage(PHLight light) {
+        // construct new message
+        return MessageFactory.newOnlineMessage(ID.fromLightId(light.getIdentifier()),
+                Description.ID,
+                forgeAttributes(light));
+    }
+
+    /**
+     * Create a new Message<OfflineMessage> for specific Hue Light
+     *
+     * @param light Hue Light
+     * @return Message<OfflineMessage>
+     */
+    public static Message<OfflineMessage> newOfflineMessage(PHLight light) {
+        // construct new message
+        return MessageFactory.newOfflineMessage(ID.fromLightId(light.getIdentifier()));
+    }
+
+    /**
+     * Create a new Message<TriggerMessage> for specific Hue Light
+     *
+     * @param light Hue Light
+     * @return Message<TriggerMessage>
+     */
+    public static Message<TriggerMessage> newTriggerMessage(PHLight light, String triggerId) {
+        // construct new message
+        return MessageFactory.newTriggerMessage(ID.fromLightId(light.getIdentifier()),
+                triggerId,
+                OverridePolicy.TIMESTAMP_ALL,
+                forgeAttributes(light));
+    }
+
+    /**
+     * Forge/Construct necessary attributes for a Hue Light
+     *
+     * @param light Hue Light
+     * @return Attributes
+     */
+    protected static Map<String, Object> forgeAttributes(PHLight light) {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("id", light.getIdentifier());
         attributes.put("model", light.getModelNumber());
@@ -37,19 +72,6 @@ public class HueMessageFactory {
         attributes.put("ct", light.getLastKnownLightState().getCt());
         attributes.put("effect", light.getLastKnownLightState().getEffectMode());
         attributes.put("color", light.getLastKnownLightState().getColorMode());
-
-        // construct new message
-        return MessageFactory.newConnectMessage(ID.fromLightId(light.getIdentifier()), Description.ID, attributes);
-    }
-
-    /**
-     * Create a new Message<DisconnectMessage> for specific Hue Light
-     *
-     * @param light Hue Light
-     * @return Message<DisconnectMessage>
-     */
-    public static Message<DisconnectMessage> newDisconnectMessage(PHLight light) {
-        // construct new message
-        return MessageFactory.newDisconnectMessage(ID.fromLightId(light.getIdentifier()));
+        return attributes;
     }
 }
