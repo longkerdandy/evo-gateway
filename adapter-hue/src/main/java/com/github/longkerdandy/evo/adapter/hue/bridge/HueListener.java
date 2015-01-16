@@ -1,11 +1,13 @@
 package com.github.longkerdandy.evo.adapter.hue.bridge;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.longkerdandy.evo.adapter.hue.constant.Description;
 import com.github.longkerdandy.evo.adapter.hue.message.HueMessageFactory;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
 import com.github.longkerdandy.evo.api.message.Message;
 import com.github.longkerdandy.evo.api.message.OfflineMessage;
 import com.github.longkerdandy.evo.api.message.OnlineMessage;
+import com.github.longkerdandy.evo.api.message.TriggerMessage;
 import com.github.longkerdandy.evo.api.protocol.QoS;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHHueSDK;
@@ -39,7 +41,6 @@ public class HueListener implements PHSDKListener {
     private PHAccessPoint bridgeAddress;        // Current Hue Bridge Address
     private PHBridge bridge;                    // Current Hue Bridge Object
     private PHHeartbeatManager hb;              // Heartbeat runs at regular intervals and update the Bridge Resources cache.
-    private boolean isConnected;                // Is connected to the bridge
     private Map<String, PHLightState> states;   // Light Id : State Mapping
 
     public HueListener(String userName, PHHueSDK hue, MqttListener mqttListener) {
@@ -58,7 +59,7 @@ public class HueListener implements PHSDKListener {
         if (notify.contains(PHMessageType.LIGHTS_CACHE_UPDATED)) {
             logger.trace("Received Lights onCacheUpdated event");
 
-            // replace states
+            // replace with current states
             Map<String, PHLightState> newStates = new HashMap<>();
 
             // Loop and compare light's state, see which one has changed
@@ -71,20 +72,33 @@ public class HueListener implements PHSDKListener {
                         logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                         // publish message
                         Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
-                        tryPublish(QoS.LEAST_ONCE, msg);
+                        tryPublish(msg);
                     }
                 } else if (lastState.isReachable() && !currentState.isReachable()) {
                     logger.debug("Device offline Light {}", light.getIdentifier());
                     // publish message
                     Message<OfflineMessage> msg = HueMessageFactory.newOfflineMessage(light);
-                    tryPublish(QoS.LEAST_ONCE, msg);
+                    tryPublish(msg);
                 } else if (!lastState.isReachable() && currentState.isReachable()) {
                     logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                     // publish message
                     Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
-                    tryPublish(QoS.LEAST_ONCE, msg);
+                    tryPublish(msg);
                 } else if (lastState.isReachable() && currentState.isReachable() && !lastState.equals(currentState)) {
-                    logger.debug("Device state change Light {} hue:{}", light.getIdentifier(), currentState.getHue());
+                    if (!lastState.isOn() && currentState.isOn()) {
+                        logger.debug("Device turned on Light {} hue:{}", light.getIdentifier(), currentState.getHue());
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_TURN_ON);
+                        tryPublish(msg);
+                    } else if (lastState.isOn() && !currentState.isOn()) {
+                        logger.debug("Device turned off Light {}", light.getIdentifier());
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_TURN_OFF);
+                        tryPublish(msg);
+                    } else if (lastState.isOn() && currentState.isOn()) {
+                        logger.debug("Device state changed Light {} hue:{}", light.getIdentifier(), currentState.getHue());
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_STATE_CHANGE);
+                        msg.setQos(QoS.MOST_ONCE);  // state change event is not that important
+                        tryPublish(msg);
+                    }
                 }
                 newStates.put(light.getIdentifier(), currentState);
             }
@@ -96,12 +110,13 @@ public class HueListener implements PHSDKListener {
     @Override
     public void onBridgeConnected(PHBridge phBridge) {
         logger.trace("Received onBridgeConnected event");
-        this.isConnected = true;
+
         // enable heartbeat
-        if (this.bridge != null) this.hb.disableAllHeartbeats(this.bridge);
         this.bridge = phBridge;
         this.hb.enableLightsHeartbeat(this.bridge, PHHueSDK.HB_INTERVAL);
 
+        // replace with current states
+        this.states.clear();
         List<PHLight> lights = this.bridge.getResourceCache().getAllLights();
         for (PHLight light : lights) {
             PHLightState lightState = light.getLastKnownLightState();
@@ -111,7 +126,7 @@ public class HueListener implements PHSDKListener {
             if (lightState.isReachable()) {
                 logger.debug("Device online Light {} hue:{}", light.getIdentifier(), lightState.getHue());
                 Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
-                tryPublish(QoS.LEAST_ONCE, msg);
+                tryPublish(msg);
             }
         }
     }
@@ -128,18 +143,24 @@ public class HueListener implements PHSDKListener {
         // Typically if multiple results are returned you will want to display them in a list and let the user select their bridge.
         // If one is found you may opt to connect automatically to that bridge.
         if (!bridgeAddress.isEmpty()) {
-            PHAccessPoint newBridge = bridgeAddress.get(0);
+            PHAccessPoint newAddress = bridgeAddress.get(0);
             if (this.bridgeAddress == null
-                    || !this.bridgeAddress.getIpAddress().equals(newBridge.getIpAddress())
-                    || !this.bridgeAddress.getMacAddress().equals(newBridge.getMacAddress())) {
-                this.bridgeAddress = newBridge;
+                    || !this.bridgeAddress.getIpAddress().equals(newAddress.getIpAddress())
+                    || !this.bridgeAddress.getMacAddress().equals(newAddress.getMacAddress())) {
+                this.bridgeAddress = newAddress;
                 logger.debug("Found new Hue Bridge ip:{} mac:{} username:{}",
                         this.bridgeAddress.getIpAddress(), this.bridgeAddress.getMacAddress(), this.bridgeAddress.getUsername());
                 this.bridgeAddress.setUsername(this.userName);
+                // since new bridge is found, disconnect from old bridge
+                if (this.bridge != null) {
+                    this.hb.disableAllHeartbeats(this.bridge);
+                    this.hue.disconnect(this.bridge);
+                    this.bridge = null;
+                }
             }
         }
         // always try to re-connect to the bridge
-        if (!isConnected) {
+        if (!this.hue.isAccessPointConnected(this.bridgeAddress)) {
             logger.debug("Try to connect to the bridge {}", this.bridgeAddress.getIpAddress());
             this.hue.connect(this.bridgeAddress);
         }
@@ -153,13 +174,11 @@ public class HueListener implements PHSDKListener {
     @Override
     public void onConnectionResumed(PHBridge phBridge) {
         // logger.trace("Received onConnectionResumed event");
-        this.isConnected = true;
     }
 
     @Override
     public void onConnectionLost(PHAccessPoint phAccessPoint) {
         logger.trace("Received onConnectionLost event from {}", phAccessPoint.getIpAddress());
-        this.isConnected = false;
     }
 
     @Override
@@ -174,12 +193,12 @@ public class HueListener implements PHSDKListener {
     /**
      * Try to publish message to mqtt topic
      *
-     * @param qos     QoS
      * @param payload Payload
      */
-    protected void tryPublish(int qos, Message payload) {
+    protected void tryPublish(Message payload) {
         try {
-            this.mqttListener.publish(qos, payload);
+            // since MQTT broker is at localhost, always use QoS 1
+            this.mqttListener.publish(QoS.LEAST_ONCE, payload);
         } catch (MqttException e) {
             logger.warn("MQTT publish exception: {}", ExceptionUtils.getMessage(e));
         } catch (JsonProcessingException e) {
