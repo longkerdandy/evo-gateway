@@ -4,21 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.longkerdandy.evo.adapter.hue.constant.Description;
 import com.github.longkerdandy.evo.adapter.hue.message.HueMessageFactory;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
-import com.github.longkerdandy.evo.api.message.Message;
-import com.github.longkerdandy.evo.api.message.OfflineMessage;
-import com.github.longkerdandy.evo.api.message.OnlineMessage;
-import com.github.longkerdandy.evo.api.message.TriggerMessage;
+import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.protocol.QoS;
+import com.philips.lighting.hue.listener.PHLightListener;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHHueSDK;
 import com.philips.lighting.hue.sdk.PHMessageType;
 import com.philips.lighting.hue.sdk.PHSDKListener;
 import com.philips.lighting.hue.sdk.heartbeat.PHHeartbeatManager;
-import com.philips.lighting.model.PHBridge;
-import com.philips.lighting.model.PHHueParsingError;
-import com.philips.lighting.model.PHLight;
-import com.philips.lighting.model.PHLightState;
+import com.philips.lighting.model.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +91,7 @@ public class HueListener implements PHSDKListener {
                         tryPublish(msg);
                     } else if (lastState.isOn() && currentState.isOn()) {
                         logger.debug("Device state changed Light {} hue:{}", light.getIdentifier(), currentState.getHue());
-                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(this.bridgeAddress, light, Description.TRIGGER_ID_STATE_CHANGE);
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(this.bridgeAddress, light, Description.TRIGGER_ID_STATE_CHANGED);
                         msg.setQos(QoS.MOST_ONCE);  // state change event is not that important
                         tryPublish(msg);
                     }
@@ -189,7 +185,6 @@ public class HueListener implements PHSDKListener {
         }
     }
 
-
     /**
      * Try to publish message to mqtt topic
      *
@@ -204,5 +199,74 @@ public class HueListener implements PHSDKListener {
         } catch (JsonProcessingException e) {
             logger.error("Json process exception: {}", ExceptionUtils.getMessage(e));
         }
+    }
+
+    public void doAction(Message<ActionMessage> message) {
+        ActionMessage action = message.getPayload();
+        Map<String, Object> attributes = action.getAttributes();
+        if (!this.hue.isAccessPointConnected(this.bridgeAddress)) {
+            logger.debug("Try to do {} action but not connect to bridge", action.getActionId());
+            return;
+        }
+        if (attributes == null || !attributes.containsKey("lightId")) {
+            logger.warn("{} action does not contains hue attribute", action.getActionId());
+            return;
+        }
+
+        PHLightState lightState = new PHLightState();
+        switch (action.getActionId()) {
+            case Description.ACTION_ID_TURN_ON:
+                if (!attributes.containsKey("hue")) {
+                    logger.warn("{} action does not contains hue attribute", action.getActionId());
+                    return;
+                }
+                lightState.setHue((int) attributes.get("hue"));
+                break;
+            case Description.ACTION_ID_TURN_OFF:
+                lightState.setHue((int) attributes.get("hue"));
+                break;
+            case Description.ACTION_ID_CHANGE_STATE:
+                if (!attributes.containsKey("hue")) {
+                    logger.warn("{} action does not contains hue attribute", action.getActionId());
+                    return;
+                }
+                lightState.setHue((int) attributes.get("hue"));
+                break;
+            default:
+                logger.warn("Un-recognized action id {}", message.getPayload().getActionId());
+                return;
+        }
+
+        this.bridge.updateLightState(String.valueOf(attributes.get("lightId")), lightState, new PHLightListener() {
+            @Override
+            public void onReceivingLightDetails(PHLight phLight) {
+
+            }
+
+            @Override
+            public void onReceivingLights(List<PHBridgeResource> list) {
+
+            }
+
+            @Override
+            public void onSearchComplete() {
+
+            }
+
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onError(int i, String s) {
+
+            }
+
+            @Override
+            public void onStateUpdate(Map<String, String> map, List<PHHueError> list) {
+
+            }
+        });
     }
 }

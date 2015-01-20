@@ -23,21 +23,21 @@ public class HueAdapter {
     public static void main(String args[]) throws Exception {
         // register mqtt listener to the broker
         MqttListener mqttListener = new MqttListener("tcp://localhost:1883", ID.getAdapterId());
-        logger.debug("The mqtt listener started.");
+        logger.debug("The mqtt listener started");
 
         // starts a MQTT Listener Guard thread
         // try to re-connect to the mqtt broker if connection lost
         MqttGuard guard = new MqttGuard(mqttListener);
         Timer timerMqtt = new Timer(true);
         timerMqtt.scheduleAtFixedRate(guard, 0, 30 * 1000); // 30s
-        logger.debug("The mqtt listener guard started.");
+        logger.debug("The mqtt listener guard started");
 
         // hue (sdk) instance
         PHHueSDK hue = PHHueSDK.getInstance();
         // register the PHSDKListener to receive callbacks from the bridge
         HueListener hueListener = new HueListener(ID.getAdapterId(), hue, mqttListener);
         hue.getNotificationManager().registerSDKListener(hueListener);
-        logger.debug("The hue listener started.");
+        logger.debug("The hue listener started");
 
         // starts a Hue Bridge Seeker thread
         // UPNP/Portal/IP search takes around 10 seconds
@@ -46,10 +46,10 @@ public class HueAdapter {
         HueSeeker seeker = new HueSeeker(sm);
         Timer timerHue = new Timer(true);
         timerHue.scheduleAtFixedRate(seeker, 0, 30 * 1000); // 30s
-        logger.debug("The hue seeker started.");
+        logger.debug("The hue seeker started");
 
         // set back mqtt listener's reference
         mqttListener.setHueListener(hueListener);
-        logger.debug("The hue adapter successfully started.");
+        logger.debug("The hue adapter successfully started");
     }
 }
