@@ -58,7 +58,7 @@ public class MessageFactory {
      */
     public static Message<OfflineMessage> newOfflineMessage(String from) {
         OfflineMessage disconnect = new OfflineMessage();
-        return newMessage(MessageType.OFFLINE, from, QoS.MOST_ONCE, disconnect);
+        return newMessage(MessageType.OFFLINE, from, QoS.LEAST_ONCE, disconnect);
     }
 
     /**
@@ -75,6 +75,6 @@ public class MessageFactory {
         trigger.setTriggerId(triggerId);
         trigger.setOverridePolicy(overridePolicy);
         trigger.setAttributes(attributes);
-        return newMessage(MessageType.TRIGGER, from, QoS.LEAST_ONCE, trigger);
+        return newMessage(MessageType.TRIGGER, from, QoS.MOST_ONCE, trigger);
     }
 }
