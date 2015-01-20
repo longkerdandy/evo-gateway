@@ -71,31 +71,31 @@ public class HueListener implements PHSDKListener {
                     if (currentState.isReachable()) {
                         logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                         // publish message
-                        Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                        Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(this.bridgeAddress, light);
                         tryPublish(msg);
                     }
                 } else if (lastState.isReachable() && !currentState.isReachable()) {
                     logger.debug("Device offline Light {}", light.getIdentifier());
                     // publish message
-                    Message<OfflineMessage> msg = HueMessageFactory.newOfflineMessage(light);
+                    Message<OfflineMessage> msg = HueMessageFactory.newOfflineMessage(this.bridgeAddress, light);
                     tryPublish(msg);
                 } else if (!lastState.isReachable() && currentState.isReachable()) {
                     logger.debug("Device online Light {} hue:{}", light.getIdentifier(), currentState.getHue());
                     // publish message
-                    Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                    Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(this.bridgeAddress, light);
                     tryPublish(msg);
                 } else if (lastState.isReachable() && currentState.isReachable() && !lastState.equals(currentState)) {
                     if (!lastState.isOn() && currentState.isOn()) {
                         logger.debug("Device turned on Light {} hue:{}", light.getIdentifier(), currentState.getHue());
-                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_TURN_ON);
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(this.bridgeAddress, light, Description.TRIGGER_ID_TURN_ON);
                         tryPublish(msg);
                     } else if (lastState.isOn() && !currentState.isOn()) {
                         logger.debug("Device turned off Light {}", light.getIdentifier());
-                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_TURN_OFF);
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(this.bridgeAddress, light, Description.TRIGGER_ID_TURN_OFF);
                         tryPublish(msg);
                     } else if (lastState.isOn() && currentState.isOn()) {
                         logger.debug("Device state changed Light {} hue:{}", light.getIdentifier(), currentState.getHue());
-                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(light, Description.TRIGGER_ID_STATE_CHANGE);
+                        Message<TriggerMessage> msg = HueMessageFactory.newTriggerMessage(this.bridgeAddress, light, Description.TRIGGER_ID_STATE_CHANGE);
                         msg.setQos(QoS.MOST_ONCE);  // state change event is not that important
                         tryPublish(msg);
                     }
@@ -125,7 +125,7 @@ public class HueListener implements PHSDKListener {
             // publish message if light is online
             if (lightState.isReachable()) {
                 logger.debug("Device online Light {} hue:{}", light.getIdentifier(), lightState.getHue());
-                Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(light);
+                Message<OnlineMessage> msg = HueMessageFactory.newOnlineMessage(this.bridgeAddress, light);
                 tryPublish(msg);
             }
         }

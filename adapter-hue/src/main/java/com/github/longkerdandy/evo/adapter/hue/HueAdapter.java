@@ -21,9 +21,6 @@ public class HueAdapter {
     private static final Logger logger = LoggerFactory.getLogger(HueAdapter.class);
 
     public static void main(String args[]) throws Exception {
-        // Gateway's Device Id
-        String gatewayId = ID.getGatewayId();
-
         // register mqtt listener to the broker
         MqttListener mqttListener = new MqttListener("tcp://localhost:1883", ID.getAdapterId());
 
@@ -36,7 +33,7 @@ public class HueAdapter {
         // hue (sdk) instance
         PHHueSDK hue = PHHueSDK.getInstance();
         // register the PHSDKListener to receive callbacks from the bridge
-        HueListener hueListener = new HueListener(gatewayId, hue, mqttListener);
+        HueListener hueListener = new HueListener(ID.getAdapterId(), hue, mqttListener);
         hue.getNotificationManager().registerSDKListener(hueListener);
 
         // starts a Hue Bridge Seeker thread

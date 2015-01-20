@@ -4,6 +4,7 @@ import com.github.longkerdandy.evo.adapter.hue.constant.Description;
 import com.github.longkerdandy.evo.adapter.hue.constant.ID;
 import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.protocol.OverridePolicy;
+import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.model.PHLight;
 
 import java.util.HashMap;
@@ -17,12 +18,13 @@ public class HueMessageFactory {
     /**
      * Create a new Message<OnlineMessage> for specific Hue Light
      *
-     * @param light Hue Light
+     * @param bridgeAddress Hue Bridge Address
+     * @param light         Hue Light
      * @return Message<OnlineMessage>
      */
-    public static Message<OnlineMessage> newOnlineMessage(PHLight light) {
+    public static Message<OnlineMessage> newOnlineMessage(PHAccessPoint bridgeAddress, PHLight light) {
         // construct new message
-        return MessageFactory.newOnlineMessage(ID.fromLightId(light.getIdentifier()),
+        return MessageFactory.newOnlineMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()),
                 Description.ID,
                 forgeAttributes(light));
     }
@@ -30,23 +32,25 @@ public class HueMessageFactory {
     /**
      * Create a new Message<OfflineMessage> for specific Hue Light
      *
-     * @param light Hue Light
+     * @param bridgeAddress Hue Bridge Address
+     * @param light         Hue Light
      * @return Message<OfflineMessage>
      */
-    public static Message<OfflineMessage> newOfflineMessage(PHLight light) {
+    public static Message<OfflineMessage> newOfflineMessage(PHAccessPoint bridgeAddress, PHLight light) {
         // construct new message
-        return MessageFactory.newOfflineMessage(ID.fromLightId(light.getIdentifier()));
+        return MessageFactory.newOfflineMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()));
     }
 
     /**
      * Create a new Message<TriggerMessage> for specific Hue Light
      *
-     * @param light Hue Light
+     * @param bridgeAddress Hue Bridge Address
+     * @param light         Hue Light
      * @return Message<TriggerMessage>
      */
-    public static Message<TriggerMessage> newTriggerMessage(PHLight light, String triggerId) {
+    public static Message<TriggerMessage> newTriggerMessage(PHAccessPoint bridgeAddress, PHLight light, String triggerId) {
         // construct new message
-        return MessageFactory.newTriggerMessage(ID.fromLightId(light.getIdentifier()),
+        return MessageFactory.newTriggerMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()),
                 triggerId,
                 OverridePolicy.TIMESTAMP_ALL,
                 forgeAttributes(light));

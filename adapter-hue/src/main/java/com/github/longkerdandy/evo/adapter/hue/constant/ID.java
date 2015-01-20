@@ -1,8 +1,6 @@
 package com.github.longkerdandy.evo.adapter.hue.constant;
 
 import com.fasterxml.uuid.EthernetAddress;
-import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.impl.NameBasedGenerator;
 import com.github.longkerdandy.evo.api.util.UuidUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,29 +12,9 @@ import java.net.URISyntaxException;
  */
 public class ID {
 
-    private static String gatewayId;    // Evolution Gateway's Device Id
+    private static String adapterId;    // Adapter Id
     private static String bridgeMac;    // Hue Bridge's Mac Address
     private static String bridgeId;     // Hue Bridge's Device Id
-
-    /**
-     * Get Gateway's Device Id
-     *
-     * @return Gateway's Device Id
-     * @throws IllegalStateException If can't determine ethernet address
-     */
-    public static String getGatewayId() {
-        if (StringUtils.isNotEmpty(gatewayId)) {
-            return gatewayId;
-        }
-
-        EthernetAddress ea = EthernetAddress.fromInterface();
-        if (ea == null) {
-            throw new IllegalStateException("Can't determine ethernet address");
-        }
-        NameBasedGenerator generator = Generators.nameBasedGenerator(NameBasedGenerator.NAMESPACE_URL);
-        gatewayId = generator.generate("https://github.com/longkerdandy/evo-gateway?mac=" + ea.toString()).toString();
-        return gatewayId;
-    }
 
     /**
      * Get Hue Adapter's Device Id
@@ -44,7 +22,24 @@ public class ID {
      * @return Hue Adapter's Device Id
      */
     public static String getAdapterId() {
-        return getGatewayId() + "-hue";
+        if (StringUtils.isNotEmpty(adapterId)) {
+            return adapterId;
+        }
+
+        // get local hardware(mac) address
+        EthernetAddress ea = EthernetAddress.fromInterface();
+        if (ea == null) {
+            throw new IllegalStateException("Can't determine ethernet address");
+        }
+
+        try {
+            URI uri = new URI("https://github.com/longkerdandy/evo-gateway/hue-adapter?mac=" + ea.toString());
+            adapterId = UuidUtils.shortUuid(uri);
+        } catch (URISyntaxException ignore) {
+            // never happens
+        }
+
+        return adapterId;
     }
 
     /**
