@@ -6,15 +6,16 @@ import com.github.longkerdandy.evo.adapter.hue.message.HueMessageFactory;
 import com.github.longkerdandy.evo.adapter.hue.mqtt.MqttListener;
 import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.protocol.QoS;
-import com.philips.lighting.hue.listener.PHLightListener;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHHueSDK;
 import com.philips.lighting.hue.sdk.PHMessageType;
 import com.philips.lighting.hue.sdk.PHSDKListener;
 import com.philips.lighting.hue.sdk.heartbeat.PHHeartbeatManager;
-import com.philips.lighting.model.*;
+import com.philips.lighting.model.PHBridge;
+import com.philips.lighting.model.PHHueParsingError;
+import com.philips.lighting.model.PHLight;
+import com.philips.lighting.model.PHLightState;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,9 +202,15 @@ public class HueListener implements PHSDKListener {
         }
     }
 
+    /**
+     * Execute action based on ActionMessage
+     *
+     * @param message Message<ActionMessage>
+     */
     public void doAction(Message<ActionMessage> message) {
         ActionMessage action = message.getPayload();
         Map<String, Object> attributes = action.getAttributes();
+        // validate
         if (!this.hue.isAccessPointConnected(this.bridgeAddress)) {
             logger.debug("Try to do {} action but not connect to bridge", action.getActionId());
             return;
@@ -212,7 +219,9 @@ public class HueListener implements PHSDKListener {
             logger.warn("{} action does not contains hue attribute", action.getActionId());
             return;
         }
+        String lightId = String.valueOf(attributes.get("lightId"));
 
+        // prepare light state
         PHLightState lightState = new PHLightState();
         switch (action.getActionId()) {
             case Description.ACTION_ID_TURN_ON:
@@ -237,36 +246,7 @@ public class HueListener implements PHSDKListener {
                 return;
         }
 
-        this.bridge.updateLightState(String.valueOf(attributes.get("lightId")), lightState, new PHLightListener() {
-            @Override
-            public void onReceivingLightDetails(PHLight phLight) {
-
-            }
-
-            @Override
-            public void onReceivingLights(List<PHBridgeResource> list) {
-
-            }
-
-            @Override
-            public void onSearchComplete() {
-
-            }
-
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onError(int i, String s) {
-
-            }
-
-            @Override
-            public void onStateUpdate(Map<String, String> map, List<PHHueError> list) {
-
-            }
-        });
+        // update light state
+        this.bridge.updateLightState(lightId, lightState, new HueLightListener(this, lightId));
     }
 }
