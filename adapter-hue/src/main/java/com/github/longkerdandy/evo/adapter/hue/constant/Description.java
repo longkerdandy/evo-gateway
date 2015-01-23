@@ -16,6 +16,7 @@ public class Description {
     public static final String TRIGGER_ID_STATE_CHANGED = "stateChanged";
 
     // Action Id
+    public static final String ACTION_ID_AUTHENTICATION = "auth";
     public static final String ACTION_ID_TURN_ON = "turnOn";
     public static final String ACTION_ID_TURN_OFF = "turnOff";
     public static final String ACTION_ID_CHANGE_STATE = "changeState";

@@ -145,8 +145,8 @@ public class HueListener implements PHSDKListener {
                     || !this.bridgeAddress.getIpAddress().equals(newAddress.getIpAddress())
                     || !this.bridgeAddress.getMacAddress().equals(newAddress.getMacAddress())) {
                 this.bridgeAddress = newAddress;
-                logger.debug("Found new Hue Bridge ip:{} mac:{} username:{}",
-                        this.bridgeAddress.getIpAddress(), this.bridgeAddress.getMacAddress(), this.bridgeAddress.getUsername());
+                logger.debug("Found new Hue Bridge ip:{} mac:{}",
+                        this.bridgeAddress.getIpAddress(), this.bridgeAddress.getMacAddress());
                 this.bridgeAddress.setUsername(this.userName);
                 // since new bridge is found, disconnect from old bridge
                 if (this.bridge != null) {
@@ -210,11 +210,18 @@ public class HueListener implements PHSDKListener {
     public void doAction(Message<ActionMessage> message) {
         ActionMessage action = message.getPayload();
         Map<String, Object> attributes = action.getAttributes();
-        // validate
+
         if (!this.hue.isAccessPointConnected(this.bridgeAddress)) {
             logger.debug("Try to do {} action but not connect to bridge", action.getActionId());
             return;
         }
+
+        // handle authentication action first
+        if (action.getActionId().equals(Description.ACTION_ID_AUTHENTICATION)) {
+            this.hue.startPushlinkAuthentication(this.bridgeAddress);
+            return;
+        }
+
         if (attributes == null || !attributes.containsKey("lightId")) {
             logger.warn("{} action does not contains hue attribute", action.getActionId());
             return;
