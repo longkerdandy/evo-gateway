@@ -1,7 +1,7 @@
 package com.github.longkerdandy.evo.api.protocol;
 
 /**
- * Qos
+ * QoS
  */
 @SuppressWarnings("unused")
 public class QoS {

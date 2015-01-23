@@ -24,7 +24,7 @@ public class HueMessageFactory {
      */
     public static Message<OnlineMessage> newOnlineMessage(PHAccessPoint bridgeAddress, PHLight light) {
         // construct new message
-        return MessageFactory.newOnlineMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()),
+        return MessageFactory.newOnlineMessage(ID.lightDeviceId(bridgeAddress.getMacAddress(), light.getIdentifier()),
                 Description.ID,
                 forgeAttributes(light));
     }
@@ -38,7 +38,7 @@ public class HueMessageFactory {
      */
     public static Message<OfflineMessage> newOfflineMessage(PHAccessPoint bridgeAddress, PHLight light) {
         // construct new message
-        return MessageFactory.newOfflineMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()));
+        return MessageFactory.newOfflineMessage(ID.lightDeviceId(bridgeAddress.getMacAddress(), light.getIdentifier()));
     }
 
     /**
@@ -50,7 +50,7 @@ public class HueMessageFactory {
      */
     public static Message<TriggerMessage> newTriggerMessage(PHAccessPoint bridgeAddress, PHLight light, String triggerId) {
         // construct new message
-        return MessageFactory.newTriggerMessage(ID.fromLightId(bridgeAddress.getMacAddress(), light.getIdentifier()),
+        return MessageFactory.newTriggerMessage(ID.lightDeviceId(bridgeAddress.getMacAddress(), light.getIdentifier()),
                 triggerId,
                 OverridePolicy.TIMESTAMP_ALL,
                 forgeAttributes(light));

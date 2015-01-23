@@ -17,11 +17,11 @@ public class ID {
     private static String bridgeId;     // Hue Bridge's Device Id
 
     /**
-     * Get Hue Adapter's Device Id
+     * Generate Hue Adapter's Device Id
      *
      * @return Hue Adapter's Device Id
      */
-    public static String getAdapterId() {
+    public static String adapterDeviceId() {
         if (StringUtils.isNotEmpty(adapterId)) {
             return adapterId;
         }
@@ -43,12 +43,12 @@ public class ID {
     }
 
     /**
-     * Get Hue Bridge's Device Id
+     * Generate Hue Bridge's Device Id
      *
      * @param mac Bride's Mac Address
      * @return Hue Bridge's Device Id
      */
-    public static String getBridgeId(String mac) {
+    public static String bridgeDeviceId(String mac) {
         if (bridgeMac != null && bridgeMac.equals(mac)) {
             return bridgeId;
         }
@@ -65,12 +65,12 @@ public class ID {
     }
 
     /**
-     * Light Id -> Device Id
+     * Generate Hue Light's Device Id
      *
-     * @param lightId Light Id from HueSDK
+     * @param lightId Light Id from HueSDK (like 1, 2, 3)
      * @return Device Id used in Evolution protocol
      */
-    public static String fromLightId(String mac, String lightId) {
-        return getBridgeId(mac) + "-" + lightId;
+    public static String lightDeviceId(String mac, String lightId) {
+        return bridgeDeviceId(mac) + "-" + lightId;
     }
 }

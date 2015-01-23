@@ -22,7 +22,7 @@ public class HueAdapter {
 
     public static void main(String args[]) throws Exception {
         // register mqtt listener to the broker
-        MqttListener mqttListener = new MqttListener("tcp://localhost:1883", ID.getAdapterId());
+        MqttListener mqttListener = new MqttListener("tcp://localhost:1883", ID.adapterDeviceId());
         logger.debug("The mqtt listener started");
 
         // starts a MQTT Listener Guard thread
@@ -35,12 +35,12 @@ public class HueAdapter {
         // hue (sdk) instance
         PHHueSDK hue = PHHueSDK.getInstance();
         // register the PHSDKListener to receive callbacks from the bridge
-        HueListener hueListener = new HueListener(ID.getAdapterId(), hue, mqttListener);
+        HueListener hueListener = new HueListener(ID.adapterDeviceId(), hue, mqttListener);
         hue.getNotificationManager().registerSDKListener(hueListener);
         logger.debug("The hue listener started");
 
         // starts a Hue Bridge Seeker thread
-        // UPNP/Portal/IP search takes around 10 seconds
+        // UPnP/Portal/IP search takes around 10 seconds
         // the PHSDKListener (onAccessPointsFound) will be notified with the bridges found
         PHBridgeSearchManager sm = (PHBridgeSearchManager) hue.getSDKService(PHHueSDK.SEARCH_BRIDGE);
         HueSeeker seeker = new HueSeeker(sm);

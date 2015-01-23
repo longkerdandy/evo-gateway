@@ -21,6 +21,6 @@ public class HueSeeker extends TimerTask {
         //      searchUpnp - indicates whether UPnP should be used for searching.
         //      searchPortal - indicates whether portal based discovery should be used for searching.
         //      searchIpAddress - indicates whether ip address based discovery should be used for searching.
-        sm.search(true, false, true);
+        this.sm.search(true, false, true);
     }
 }
