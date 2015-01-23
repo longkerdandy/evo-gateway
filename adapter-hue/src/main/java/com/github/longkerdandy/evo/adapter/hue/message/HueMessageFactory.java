@@ -52,7 +52,7 @@ public class HueMessageFactory {
         // construct new message
         return MessageFactory.newTriggerMessage(ID.lightDeviceId(bridgeAddress.getMacAddress(), light.getIdentifier()),
                 triggerId,
-                OverridePolicy.TIMESTAMP_ALL,
+                OverridePolicy.REPLACE_TIMESTAMP,
                 forgeAttributes(light));
     }
 
