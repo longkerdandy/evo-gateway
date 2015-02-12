@@ -4,3 +4,5 @@ include 'adapter-hue'
 
 include 'gateway-api'
 
+include 'gateway-core'
+
