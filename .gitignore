@@ -25,6 +25,8 @@ classes/
 
 # Package Files
 *.jar
+!huelocalsdk.jar
+!huesdkresources.jar
 *.war
 *.ear
 
