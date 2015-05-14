@@ -10,6 +10,7 @@ subprojects {
     // Maven Repository
     repositories {
         mavenCentral()
+        maven { url "http://4thline.org/m2" }
         maven { url "https://repo.eclipse.org/content/repositories/paho-releases/" }
     }
 
