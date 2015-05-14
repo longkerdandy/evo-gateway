@@ -1,0 +1,15 @@
+// Project Version
+version = '1.0.0'
+
+// Dependencies
+dependencies {
+    // Api
+    compile project(':gateway-api')
+
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'io.reactivex:rxjava:1.0.6'
+    compile 'javax.jmdns:jmdns:3.4.1'
+
+    // UUID
+    compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
+}

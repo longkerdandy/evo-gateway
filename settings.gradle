@@ -6,3 +6,5 @@ include 'gateway-api'
 
 include 'gateway-core'
 
+include 'adapter-wemo'
+
