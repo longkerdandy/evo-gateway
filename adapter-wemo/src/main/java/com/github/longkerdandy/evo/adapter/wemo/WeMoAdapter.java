@@ -82,8 +82,9 @@ public class WeMoAdapter {
         System.out.println("Starting Cling...");
         UpnpService upnpService = new UpnpServiceImpl(new WeMoUpnpServiceConfiguration(), listener);
 
-        // Send a search message to all belkin wemo switch devices, they should respond soon
-        upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));
+        // Send a search message to belkin wemo devices, they should respond soon
+        upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));  // switch
+        upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "sensor", 1)));  // motion
 
         // Let's wait 10 seconds for them to respond
         System.out.println("Waiting 10 seconds before shutting down...");

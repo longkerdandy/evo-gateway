@@ -5,13 +5,13 @@ import org.fourthline.cling.binding.xml.*;
 import org.fourthline.cling.model.Namespace;
 
 /**
- * Extends DefaultUpnpServiceConfiguration for Belkin WeMo
+ * WeMo Fix
  */
 public class WeMoUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 
     @Override
     protected DeviceDescriptorBinder createDeviceDescriptorBinderUDA10() {
-        return new UDA10DeviceDescriptorBinderSAXImpl();
+        return new WeMoRecoveringUDA10DeviceDescriptorBinderImpl();
     }
 
     @Override
