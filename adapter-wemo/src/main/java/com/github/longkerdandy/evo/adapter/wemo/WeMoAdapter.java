@@ -25,13 +25,5 @@ public class WeMoAdapter {
         // Send a search message to belkin wemo devices, they should respond soon
         upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));  // switch
         upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "sensor", 1)));  // motion
-
-        // Let's wait 10 seconds for them to respond
-        System.out.println("Waiting 10 seconds before shutting down...");
-        Thread.sleep(10000);
-
-        // Release all resources and advertise BYEBYE to other UPnP devices
-        System.out.println("Stopping Cling...");
-        upnpService.shutdown();
     }
 }

@@ -2,16 +2,24 @@ package com.github.longkerdandy.evo.adapter.wemo.upnp;
 
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
+import org.fourthline.cling.controlpoint.SubscriptionCallback;
+import org.fourthline.cling.model.UnsupportedDataException;
 import org.fourthline.cling.model.action.ActionArgumentValue;
 import org.fourthline.cling.model.action.ActionInvocation;
+import org.fourthline.cling.model.gena.CancelReason;
+import org.fourthline.cling.model.gena.GENASubscription;
+import org.fourthline.cling.model.gena.RemoteGENASubscription;
 import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.model.meta.Action;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.model.meta.Service;
+import org.fourthline.cling.model.state.StateVariableValue;
 import org.fourthline.cling.model.types.*;
 import org.fourthline.cling.registry.Registry;
 import org.fourthline.cling.registry.RegistryListener;
+
+import java.util.Map;
 
 /**
  * RegistryListener for Belkin WeMo Devices
@@ -39,6 +47,7 @@ public class WeMoRegistryListener implements RegistryListener {
         System.out.println("Remote device available: " + device.getDisplayString());
         if (device.getType().getType().equals("controllee")) {
             Service service = device.findService(new ServiceId("Belkin", "basicevent1"));
+
             Action getBinaryStateAction = service.getAction("GetBinaryState");
             ActionInvocation getBinaryStateInvocation = new ActionInvocation(getBinaryStateAction);
             ActionCallback getBinaryStateCallback = new ActionCallback(getBinaryStateInvocation) {
@@ -54,27 +63,62 @@ public class WeMoRegistryListener implements RegistryListener {
                     System.err.println(defaultMsg);
                 }
             };
-
             upnpService.getControlPoint().execute(getBinaryStateCallback);
 
-            Action setBinaryStateAction = service.getAction("SetBinaryState");
-            ActionInvocation setBinaryStateInvocation = new ActionInvocation(setBinaryStateAction);
-            setBinaryStateInvocation.setInput("BinaryState", "0");
-            ActionCallback setBinaryStateCallback = new ActionCallback(setBinaryStateInvocation) {
+//            Action setBinaryStateAction = service.getAction("SetBinaryState");
+//            ActionInvocation setBinaryStateInvocation = new ActionInvocation(setBinaryStateAction);
+//            setBinaryStateInvocation.setInput("BinaryState", "0");
+//            ActionCallback setBinaryStateCallback = new ActionCallback(setBinaryStateInvocation) {
+//
+//                @Override
+//                public void success(ActionInvocation invocation) {
+//                    ActionArgumentValue[] output = invocation.getOutput();
+//                    assert(output.length == 0);
+//                }
+//
+//                @Override
+//                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+//                    System.err.println(defaultMsg);
+//                }
+//            };
+//            upnpService.getControlPoint().execute(setBinaryStateCallback);
+
+            SubscriptionCallback callback = new SubscriptionCallback(service, 600) {
 
                 @Override
-                public void success(ActionInvocation invocation) {
-                    ActionArgumentValue[] output = invocation.getOutput();
-                    assert(output.length == 0);
+                public void established(GENASubscription sub) {
+                    System.out.println("Established: " + sub.getSubscriptionId());
                 }
 
                 @Override
-                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
                     System.err.println(defaultMsg);
                 }
-            };
 
-            upnpService.getControlPoint().execute(setBinaryStateCallback);
+                @Override
+                public void ended(GENASubscription sub, CancelReason reason, UpnpResponse response) {
+                    assert(reason == null);
+                }
+
+                @Override
+                public void eventReceived(GENASubscription sub) {
+                    System.out.println("Event: " + sub.getCurrentSequence().getValue());
+                    Map<String, StateVariableValue> values = sub.getCurrentValues();
+                    StateVariableValue state = values.get("BinaryState");
+                    System.out.println("WeMo Switch's state is : " + state.getValue());
+                }
+
+                @Override
+                public void eventsMissed(GENASubscription sub, int numberOfMissedEvents) {
+                    System.out.println("Missed events: " + numberOfMissedEvents);
+                }
+
+                @Override
+                protected void invalidMessage(RemoteGENASubscription sub, UnsupportedDataException ex) {
+                    // Log/send an error report?
+                }
+            };
+            upnpService.getControlPoint().execute(callback);
         }
     }
 
