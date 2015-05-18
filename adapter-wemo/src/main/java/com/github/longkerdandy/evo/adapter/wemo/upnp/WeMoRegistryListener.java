@@ -56,6 +56,25 @@ public class WeMoRegistryListener implements RegistryListener {
             };
 
             upnpService.getControlPoint().execute(getBinaryStateCallback);
+
+            Action setBinaryStateAction = service.getAction("SetBinaryState");
+            ActionInvocation setBinaryStateInvocation = new ActionInvocation(setBinaryStateAction);
+            setBinaryStateInvocation.setInput("BinaryState", "0");
+            ActionCallback setBinaryStateCallback = new ActionCallback(setBinaryStateInvocation) {
+
+                @Override
+                public void success(ActionInvocation invocation) {
+                    ActionArgumentValue[] output = invocation.getOutput();
+                    assert(output.length == 0);
+                }
+
+                @Override
+                public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    System.err.println(defaultMsg);
+                }
+            };
+
+            upnpService.getControlPoint().execute(setBinaryStateCallback);
         }
     }
 
