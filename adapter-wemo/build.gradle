@@ -9,6 +9,9 @@ dependencies {
     // Cling
     compile 'org.fourthline.cling:cling-core:2.0.1'
 
+    // XML
+    compile 'com.thoughtworks.xstream:xstream:1.4.8'
+
     // UUID
     compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
 }

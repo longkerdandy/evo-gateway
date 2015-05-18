@@ -1,11 +1,12 @@
 package com.github.longkerdandy.evo.adapter.wemo.upnp;
 
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
-import org.fourthline.cling.binding.xml.*;
+import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
+import org.fourthline.cling.binding.xml.ServiceDescriptorBinder;
 import org.fourthline.cling.model.Namespace;
 
 /**
- * WeMo Fix
+ * UpnpServiceConfiguration for Belkin WeMo Devices
  */
 public class WeMoUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 
