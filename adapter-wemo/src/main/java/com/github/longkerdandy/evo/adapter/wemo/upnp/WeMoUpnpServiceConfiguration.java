@@ -4,6 +4,7 @@ import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
 import org.fourthline.cling.binding.xml.ServiceDescriptorBinder;
 import org.fourthline.cling.model.Namespace;
+import org.fourthline.cling.model.types.ServiceType;
 import org.fourthline.cling.transport.impl.AsyncServletStreamServerConfigurationImpl;
 import org.fourthline.cling.transport.impl.AsyncServletStreamServerImpl;
 import org.fourthline.cling.transport.impl.jetty.JettyServletContainer;
@@ -42,5 +43,10 @@ public class WeMoUpnpServiceConfiguration extends DefaultUpnpServiceConfiguratio
     @Override
     protected Namespace createNamespace() {
         return new Namespace("/WeMo");
+    }
+
+    @Override
+    public ServiceType[] getExclusiveServiceTypes() {
+        return new ServiceType[]{new ServiceType("Belkin", "basicevent")};
     }
 }
