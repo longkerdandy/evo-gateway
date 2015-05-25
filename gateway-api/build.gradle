@@ -5,4 +5,7 @@ version = '1.0.0'
 dependencies {
     // UUID
     compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
+
+    // Redis
+    compile 'redis.clients:jedis:2.7.2'
 }

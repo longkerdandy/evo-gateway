@@ -6,9 +6,12 @@ package com.github.longkerdandy.evo.api.protocol;
 @SuppressWarnings("unused")
 public class OverridePolicy {
 
-    public static final int REPLACE_FORCE = 1;                      // Replace all attributes (old attributes will be dropped)
-    public static final int REPLACE_TIMESTAMP = 2;                  // Replace all attributes only if the timestamp is newer (old attributes will be dropped)
-    public static final int MERGE_FORCE = 3;                        // Merge the attributes
-    public static final int MERGE_TIMESTAMP = 4;                    // Merge the attributes only if the timestamp is newer
-    public static final int MERGE_ATTRIBUTE_TIMESTAMP = 5;          // Merge the attributes only if the timestamp is newer
+    public static final int IGNORE = 0;                 // Ignore attributes changes
+    public static final int REPLACE = 1;                // Replace current attributes
+    public static final int REPLACE_IF_NEWER = 2;       // Replace current attributes if is newer
+    public static final int UPDATE = 3;                 // Update/Merge current attributes
+    public static final int UPDATE_IF_NEWER = 4;        // Update/Merge current attributes if is newer
+
+    private OverridePolicy() {
+    }
 }

@@ -7,11 +7,11 @@ import java.util.Map;
  * Device receives certain type of command(action) and changes its state
  */
 @SuppressWarnings("unused")
-public class ActionMessage {
+public class Action {
 
-    private String actionId;                // Action Id
-    private int overridePolicy;             // Attributes Override Policy
-    private Map<String, Object> attributes; // Attributes
+    protected String actionId;                // Action Id
+    protected int lifetime;                   // Action Lifetime, seconds until this action expires
+    protected Map<String, Object> attributes; // Attributes
 
     public String getActionId() {
         return actionId;
@@ -21,12 +21,12 @@ public class ActionMessage {
         this.actionId = actionId;
     }
 
-    public int getOverridePolicy() {
-        return overridePolicy;
+    public int getLifetime() {
+        return lifetime;
     }
 
-    public void setOverridePolicy(int overridePolicy) {
-        this.overridePolicy = overridePolicy;
+    public void setLifetime(int lifetime) {
+        this.lifetime = lifetime;
     }
 
     public Map<String, Object> getAttributes() {

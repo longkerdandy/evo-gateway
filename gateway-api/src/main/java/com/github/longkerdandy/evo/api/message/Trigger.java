@@ -4,14 +4,14 @@ import java.util.Map;
 
 /**
  * Trigger
- * Device send certain type of notification(trigger) when state changed
+ * Device sends certain type of notification(trigger) when state changed
  */
 @SuppressWarnings("unused")
-public class TriggerMessage {
+public class Trigger {
 
-    private String triggerId;               // Trigger Id
-    private int overridePolicy;             // Attributes Override Policy
-    private Map<String, Object> attributes; // Attributes
+    protected String triggerId;               // Trigger Id
+    protected int policy;                     // Attributes Override Policy
+    protected Map<String, Object> attributes; // Attributes
 
     public String getTriggerId() {
         return triggerId;
@@ -21,12 +21,12 @@ public class TriggerMessage {
         this.triggerId = triggerId;
     }
 
-    public int getOverridePolicy() {
-        return overridePolicy;
+    public int getPolicy() {
+        return policy;
     }
 
-    public void setOverridePolicy(int overridePolicy) {
-        this.overridePolicy = overridePolicy;
+    public void setPolicy(int policy) {
+        this.policy = policy;
     }
 
     public Map<String, Object> getAttributes() {
