@@ -1,5 +1,6 @@
 package com.github.longkerdandy.evo.adapter.wemo.upnp;
 
+import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoHandler;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
 import org.fourthline.cling.controlpoint.SubscriptionCallback;
@@ -18,18 +19,26 @@ import org.fourthline.cling.model.state.StateVariableValue;
 import org.fourthline.cling.model.types.*;
 import org.fourthline.cling.registry.Registry;
 import org.fourthline.cling.registry.RegistryListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * RegistryListener for Belkin WeMo Devices
+ * RegistryListener for WeMo Devices
  */
 public class WeMoRegistryListener implements RegistryListener {
 
-    private UpnpService upnpService;
+    // Logger
+    private static final Logger logger = LoggerFactory.getLogger(WeMoRegistryListener.class);
 
-    public WeMoRegistryListener(UpnpService upnpService) {
+    private final UpnpService upnpService;    // UPnP service
+    private final List<WeMoHandler> handlers; // Handlers
+
+    public WeMoRegistryListener(UpnpService upnpService, List<WeMoHandler> handlers) {
         this.upnpService = upnpService;
+        this.handlers = handlers;
     }
 
     @Override
@@ -82,43 +91,6 @@ public class WeMoRegistryListener implements RegistryListener {
 //                }
 //            };
 //            upnpService.getControlPoint().execute(setBinaryStateCallback);
-
-            SubscriptionCallback callback = new SubscriptionCallback(service, 600) {
-
-                @Override
-                public void established(GENASubscription sub) {
-                    System.out.println("Established: " + sub.getSubscriptionId());
-                }
-
-                @Override
-                protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
-                    System.err.println(defaultMsg);
-                }
-
-                @Override
-                public void ended(GENASubscription sub, CancelReason reason, UpnpResponse response) {
-                    assert(reason == null);
-                }
-
-                @Override
-                public void eventReceived(GENASubscription sub) {
-                    System.out.println("Event: " + sub.getCurrentSequence().getValue());
-                    Map<String, StateVariableValue> values = sub.getCurrentValues();
-                    StateVariableValue state = values.get("BinaryState");
-                    System.out.println("WeMo Switch's state is : " + state.getValue());
-                }
-
-                @Override
-                public void eventsMissed(GENASubscription sub, int numberOfMissedEvents) {
-                    System.out.println("Missed events: " + numberOfMissedEvents);
-                }
-
-                @Override
-                protected void invalidMessage(RemoteGENASubscription sub, UnsupportedDataException ex) {
-                    // Log/send an error report?
-                }
-            };
-            upnpService.getControlPoint().execute(callback);
         }
     }
 

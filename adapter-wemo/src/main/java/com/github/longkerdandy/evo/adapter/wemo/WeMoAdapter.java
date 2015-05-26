@@ -1,18 +1,25 @@
 package com.github.longkerdandy.evo.adapter.wemo;
 
+import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoHandler;
+import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoSwitchHandler;
+import com.github.longkerdandy.evo.adapter.wemo.mq.WeMoSubscriberWorkerFactory;
 import com.github.longkerdandy.evo.adapter.wemo.storage.WeMoRedisStorage;
 import com.github.longkerdandy.evo.adapter.wemo.upnp.WeMoRegistryListener;
 import com.github.longkerdandy.evo.adapter.wemo.upnp.WeMoUpnpServiceConfiguration;
+import com.github.longkerdandy.evo.api.mq.Publisher;
+import com.github.longkerdandy.evo.api.mq.Subscriber;
 import com.github.longkerdandy.evo.api.mq.Topics;
 import com.github.longkerdandy.evo.api.storage.Scheme;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
-import org.fourthline.cling.model.message.header.DeviceTypeHeader;
 import org.fourthline.cling.model.message.header.ServiceTypeHeader;
-import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.model.types.ServiceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,7 +27,10 @@ import java.util.Map;
  */
 public class WeMoAdapter {
 
-    // Adapter Id
+    // Logger
+    private static final Logger logger = LoggerFactory.getLogger(WeMoAdapter.class);
+
+    // Adapter Information
     public static final String ID = "wemo";
     public static final String NAME = "Belkin WeMo Adapater";
     public static final String VERSION = "1.0";
@@ -33,18 +43,33 @@ public class WeMoAdapter {
         // register adapter
         Map<String, String> info = prepareAdapterInfo();
         storage.updateAdapter(ID, info);
+        logger.info("Belkin WeMo adapter registered");
 
-        // This will create necessary network resources for UPnP right away
-        System.out.println("Starting Cling...");
+        // init message queue publisher & subscriber
+        Publisher publisher = new Publisher();
+        logger.info("Message queue publisher init completed");
+        WeMoSubscriberWorkerFactory factory = new WeMoSubscriberWorkerFactory();
+        Subscriber subscriber = new Subscriber();
+        subscriber.subscribe(CALLBACK, factory);
+        logger.info("Message queue subscriber init completed");
+
+        // create Cling UPnP service
+        List<WeMoHandler> handlers = new ArrayList<>();
+        handlers.add(new WeMoSwitchHandler());
         UpnpService upnpService = new UpnpServiceImpl(new WeMoUpnpServiceConfiguration());
-        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService));
+        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService, handlers));
+        logger.info("Message queue subscriber init completed");
 
-        // Send a search message to belkin wemo devices, they should respond soon
+        // send a ssdp search for belkin wemo devices
         upnpService.getControlPoint().search(new ServiceTypeHeader(new ServiceType("Belkin", "basicevent", 1)));  // common
-        upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));  // switch
-        upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "sensor", 1)));  // motion
+        // upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));  // switch
+        // upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "sensor", 1)));  // motion
+        logger.debug("Send ssdp search message for belkin wemo devices");
     }
 
+    /**
+     * Prepare WeMo adapter information
+     */
     protected static Map<String, String> prepareAdapterInfo() {
         Map<String, String> map = new HashMap<>();
         map.put(Scheme.ADAPTER_ID, ID);
