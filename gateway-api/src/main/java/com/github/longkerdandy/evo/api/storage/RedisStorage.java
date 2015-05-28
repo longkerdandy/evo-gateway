@@ -6,6 +6,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,11 +14,8 @@ import java.util.Map;
  */
 public class RedisStorage {
 
-    // Logger
-    private static final Logger logger = LoggerFactory.getLogger(RedisStorage.class);
-
     // Redis Client Pool
-    private final JedisPool jedisPool;
+    protected final JedisPool jedisPool;
 
     public RedisStorage() {
         this("localhost", 6379);
@@ -62,8 +60,18 @@ public class RedisStorage {
         }
     }
 
-    public void updateDeviceConn(String deviceId, Map<String, String> conn) {
+    public String getDeviceConn(String deviceId, String field) {
         try (Jedis jedis = this.jedisPool.getResource()) {
+            String key = Scheme.DEVICE_CONN(deviceId);
+            return jedis.hget(key, field);
+        }
+    }
+
+    public void updateDeviceConn(String deviceId, String state) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            Map<String, String> conn = new HashMap<>();
+            conn.put(Scheme.DEVICE_CONN_STATE, state);
+            conn.put(Scheme.DEVICE_CONN_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
             String key = Scheme.DEVICE_CONN(deviceId);
             jedis.hmset(key, conn);
         }
@@ -76,10 +84,24 @@ public class RedisStorage {
         }
     }
 
+    public String getDeviceAttr(String deviceId, String attrName) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            String key = Scheme.DEVICE_ATTR(deviceId);
+            return jedis.hget(key, attrName);
+        }
+    }
+
     public void updateDeviceAttr(String deviceId, Map<String, String> attr) {
         try (Jedis jedis = this.jedisPool.getResource()) {
             String key = Scheme.DEVICE_ATTR(deviceId);
             jedis.hmset(key, attr);
+        }
+    }
+
+    public void updateDeviceAttr(String deviceId, String attrName, String attrValue) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            String key = Scheme.DEVICE_ATTR(deviceId);
+            jedis.hset(key, attrName, attrValue);
         }
     }
 }

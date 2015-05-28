@@ -1,6 +1,7 @@
 package com.github.longkerdandy.evo.adapter.wemo.handler;
 
-import org.fourthline.cling.UpnpService;
+import com.github.longkerdandy.evo.api.message.Action;
+import com.github.longkerdandy.evo.api.message.Message;
 import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.registry.Registry;
 
@@ -10,45 +11,32 @@ import org.fourthline.cling.registry.Registry;
 public interface WeMoHandler {
 
     /**
-     * Get handler device type
+     * Get handler device model
      *
-     * @return Device Type
+     * @return Device Model
      */
-    String getType();
+    String getModel();
 
     /**
-     * Called when complete metadata of a newly discovered device is available.
+     * Subscription to be executed when device added or updated
      *
-     * @param upnpService The Cling UPnP service stack
-     * @param registry    The Cling registry of all devices and services know to the local UPnP stack.
-     * @param device      A validated and hydrated device metadata graph, with complete service metadata.
+     * @return SubscriptionCallback
      */
-    void deviceAdded(UpnpService upnpService, Registry registry, RemoteDevice device);
+    WeMoSubscriptionCallback getDeviceSubscription(String deviceId, Registry registry, RemoteDevice device);
 
     /**
-     * Called when a discovered device's expiration timestamp is updated.
-     * <p>
-     * This is a signal that a device is still alive and you typically don't have to react to this
-     * event. You will be notified when a device disappears through timeout.
-     * </p>
+     * Forge and push Connect Message to message queue
      *
-     * @param upnpService The Cling UPnP service stack
-     * @param registry    The Cling registry of all devices and services know to the local UPnP stack.
-     * @param device      A validated and hydrated device metadata graph, with complete service metadata.
+     * @param deviceId Device Id
      */
-    void deviceUpdated(UpnpService upnpService, Registry registry, RemoteDevice device);
+    void sendConnectMessage(String deviceId);
 
     /**
-     * Called when a previously discovered device disappears.
-     * <p>
-     * This method will also be called when a discovered device did not update its expiration timeout
-     * and has been been removed automatically by the local registry. This method will not be called
-     * when the UPnP stack is shutting down.
-     * </p>
+     * Forge and push Disconnect Message to message queue
      *
-     * @param upnpService The Cling UPnP service stack
-     * @param registry    The Cling registry of all devices and services know to the local UPnP stack.
-     * @param device      A validated and hydrated device metadata graph, with complete service metadata.
+     * @param deviceId Device Id
      */
-    void deviceRemoved(UpnpService upnpService, Registry registry, RemoteDevice device);
+    void sendDisconnectMessage(String deviceId);
+
+    void executeActionMessage(RemoteDevice device, Message<Action> msg);
 }

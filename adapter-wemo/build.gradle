@@ -8,9 +8,9 @@ dependencies {
 
     // Cling
     compile 'org.fourthline.cling:cling-core:2.0.1'
-    compile 'org.eclipse.jetty:jetty-client:8.1.17.v20150415'
-    compile 'org.eclipse.jetty:jetty-server:8.1.17.v20150415'
-    compile 'org.eclipse.jetty:jetty-servlet:8.1.17.v20150415'
+    //    compile 'org.eclipse.jetty:jetty-client:8.1.17.v20150415'
+    //    compile 'org.eclipse.jetty:jetty-server:8.1.17.v20150415'
+    //    compile 'org.eclipse.jetty:jetty-servlet:8.1.17.v20150415'
 
     // XML
     compile 'com.thoughtworks.xstream:xstream:1.4.8'

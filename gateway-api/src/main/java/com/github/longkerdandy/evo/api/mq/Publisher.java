@@ -47,7 +47,7 @@ public class Publisher {
         try (Jedis jedis = jedisPool.getResource()) {
             String value = JsonUtils.ObjectMapper.writeValueAsString(msg);
             long count = jedis.publish(topic, value);
-            logger.trace("Successful send message {} {} to mq {} subscriber", msg.getMsgType(), msg.getMsgId(), count);
+            logger.debug("Successful send message {} {} to mq {} subscriber", msg.getMsgType(), msg.getMsgId(), count);
         } catch (JsonProcessingException e) {
             logger.error("Send message {} {} to mq with exception: {}", msg.getMsgType(), msg.getMsgId(), ExceptionUtils.getMessage(e));
         }

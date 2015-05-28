@@ -34,7 +34,7 @@ public class WeMoAdapter {
     public static final String ID = "wemo";
     public static final String NAME = "Belkin WeMo Adapater";
     public static final String VERSION = "1.0";
-    public static final String CALLBACK = Topics.ADAPTER(ID);
+    public static final String CALLBACK = Topics.DEVICE_ADAPTER(ID);
 
     public static void main(String[] args) throws Exception {
         // redis storage
@@ -48,16 +48,17 @@ public class WeMoAdapter {
         // init message queue publisher & subscriber
         Publisher publisher = new Publisher();
         logger.info("Message queue publisher init completed");
-        WeMoSubscriberWorkerFactory factory = new WeMoSubscriberWorkerFactory();
-        Subscriber subscriber = new Subscriber();
-        subscriber.subscribe(CALLBACK, factory);
-        logger.info("Message queue subscriber init completed");
 
         // create Cling UPnP service
-        List<WeMoHandler> handlers = new ArrayList<>();
-        handlers.add(new WeMoSwitchHandler());
         UpnpService upnpService = new UpnpServiceImpl(new WeMoUpnpServiceConfiguration());
-        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService, handlers));
+        List<WeMoHandler> handlers = new ArrayList<>();
+        handlers.add(new WeMoSwitchHandler(upnpService, storage, publisher));
+        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService, storage, handlers));
+        logger.info("UPnP service started");
+
+        WeMoSubscriberWorkerFactory factory = new WeMoSubscriberWorkerFactory(upnpService, storage, handlers);
+        Subscriber subscriber = new Subscriber();
+        subscriber.subscribe(CALLBACK, factory);
         logger.info("Message queue subscriber init completed");
 
         // send a ssdp search for belkin wemo devices

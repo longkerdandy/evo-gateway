@@ -20,15 +20,15 @@ import org.fourthline.cling.transport.spi.StreamServer;
  */
 public class WeMoUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 
-    @Override
-    public StreamClient createStreamClient() {
-        return new StreamClientImpl(new StreamClientConfigurationImpl(getSyncProtocolExecutorService()));
-    }
-
-    @Override
-    public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
-        return new AsyncServletStreamServerImpl(new AsyncServletStreamServerConfigurationImpl(JettyServletContainer.INSTANCE, networkAddressFactory.getStreamListenPort()));
-    }
+    //    @Override
+    //    public StreamClient createStreamClient() {
+    //        return new StreamClientImpl(new StreamClientConfigurationImpl(getSyncProtocolExecutorService()));
+    //    }
+    //
+    //    @Override
+    //    public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
+    //        return new AsyncServletStreamServerImpl(new AsyncServletStreamServerConfigurationImpl(JettyServletContainer.INSTANCE, networkAddressFactory.getStreamListenPort()));
+    //    }
 
     /**
      * WeMo fixed device descriptor parser
