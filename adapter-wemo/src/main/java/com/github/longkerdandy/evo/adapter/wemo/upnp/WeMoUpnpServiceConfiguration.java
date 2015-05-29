@@ -5,30 +5,20 @@ import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
 import org.fourthline.cling.binding.xml.ServiceDescriptorBinder;
 import org.fourthline.cling.model.Namespace;
 import org.fourthline.cling.model.types.ServiceType;
-import org.fourthline.cling.transport.impl.AsyncServletStreamServerConfigurationImpl;
-import org.fourthline.cling.transport.impl.AsyncServletStreamServerImpl;
-import org.fourthline.cling.transport.impl.jetty.JettyServletContainer;
-import org.fourthline.cling.transport.impl.jetty.StreamClientConfigurationImpl;
-import org.fourthline.cling.transport.impl.jetty.StreamClientImpl;
-import org.fourthline.cling.transport.spi.NetworkAddressFactory;
-import org.fourthline.cling.transport.spi.StreamClient;
-import org.fourthline.cling.transport.spi.StreamServer;
-
+import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
+import org.fourthline.cling.transport.spi.DatagramProcessor;
 
 /**
  * UpnpServiceConfiguration for Belkin WeMo Devices
  */
 public class WeMoUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 
-    //    @Override
-    //    public StreamClient createStreamClient() {
-    //        return new StreamClientImpl(new StreamClientConfigurationImpl(getSyncProtocolExecutorService()));
-    //    }
-    //
-    //    @Override
-    //    public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
-    //        return new AsyncServletStreamServerImpl(new AsyncServletStreamServerConfigurationImpl(JettyServletContainer.INSTANCE, networkAddressFactory.getStreamListenPort()));
-    //    }
+    /**
+     * WeMo fixed device udp/ssdp parser
+     */
+    protected DatagramProcessor createDatagramProcessor() {
+        return new WeMoDatagramProcessorImpl();
+    }
 
     /**
      * WeMo fixed device descriptor parser

@@ -17,10 +17,7 @@ import org.fourthline.cling.model.types.ServiceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Belkin WeMo adapter
@@ -45,27 +42,41 @@ public class WeMoAdapter {
         storage.updateAdapter(ID, info);
         logger.info("Belkin WeMo adapter registered");
 
-        // init message queue publisher & subscriber
+        // create message queue publisher
         Publisher publisher = new Publisher();
-        logger.info("Message queue publisher init completed");
+        logger.info("Message queue publisher started");
 
         // create Cling UPnP service
         UpnpService upnpService = new UpnpServiceImpl(new WeMoUpnpServiceConfiguration());
-        List<WeMoHandler> handlers = new ArrayList<>();
-        handlers.add(new WeMoSwitchHandler(upnpService, storage, publisher));
-        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService, storage, handlers));
         logger.info("UPnP service started");
 
+        // create WeMo handlers
+        List<WeMoHandler> handlers = new ArrayList<>();
+        handlers.add(new WeMoSwitchHandler(upnpService, storage, publisher));
+
+        // create UPnP registry listener
+        upnpService.getRegistry().addListener(new WeMoRegistryListener(upnpService, storage, handlers));
+
+        // create message queue subscriber
         WeMoSubscriberWorkerFactory factory = new WeMoSubscriberWorkerFactory(upnpService, storage, handlers);
         Subscriber subscriber = new Subscriber();
         subscriber.subscribe(CALLBACK, factory);
-        logger.info("Message queue subscriber init completed");
+        logger.info("Message queue subscriber started");
 
         // send a ssdp search for belkin wemo devices
         upnpService.getControlPoint().search(new ServiceTypeHeader(new ServiceType("Belkin", "basicevent", 1)));  // common
-        // upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "controllee", 1)));  // switch
-        // upnpService.getControlPoint().search(new DeviceTypeHeader(new DeviceType("Belkin", "sensor", 1)));  // motion
-        logger.debug("Send ssdp search message for belkin wemo devices");
+        logger.debug("Send SSDP search message for belkin wemo devices");
+
+        // send scheduled ssdp search for belkin wemo devices
+        Timer timer = new Timer(true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                upnpService.getControlPoint().search(new ServiceTypeHeader(new ServiceType("Belkin", "basicevent", 1)));
+            }
+        };
+        timer.scheduleAtFixedRate(task, 0, 60000);
+        logger.debug("SSDP search timer task started");
     }
 
     /**
