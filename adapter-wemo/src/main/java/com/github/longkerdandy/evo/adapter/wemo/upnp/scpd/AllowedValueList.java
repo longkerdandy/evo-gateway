@@ -1,7 +1,5 @@
 package com.github.longkerdandy.evo.adapter.wemo.upnp.scpd;
 
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
-
 import java.util.List;
 
 /**

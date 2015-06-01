@@ -38,5 +38,12 @@ public interface WeMoHandler {
      */
     void sendDisconnectMessage(String deviceId);
 
+    /**
+     * Received Action Message from message queue
+     * Execute the action on device
+     *
+     * @param device Device Id
+     * @param msg    Action Message
+     */
     void executeActionMessage(RemoteDevice device, Message<Action> msg);
 }

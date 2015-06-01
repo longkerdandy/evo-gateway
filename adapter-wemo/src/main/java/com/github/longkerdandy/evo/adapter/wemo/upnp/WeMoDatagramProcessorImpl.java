@@ -15,6 +15,7 @@ import java.net.InetAddress;
 public class WeMoDatagramProcessorImpl extends DatagramProcessorImpl {
 
     @Override
+    @SuppressWarnings("unchecked")
     protected IncomingDatagramMessage readResponseMessage(InetAddress receivedOnAddress,
                                                           DatagramPacket datagram,
                                                           ByteArrayInputStream is,
@@ -27,7 +28,7 @@ public class WeMoDatagramProcessorImpl extends DatagramProcessorImpl {
         UpnpHeaders headers = msg.getHeaders();
         UpnpHeader maxAgeHeader = headers.getFirstHeader(UpnpHeader.Type.MAX_AGE);
         if (maxAgeHeader != null) {
-            maxAgeHeader.setString("600");
+            maxAgeHeader.setValue(600);
         }
 
         return msg;

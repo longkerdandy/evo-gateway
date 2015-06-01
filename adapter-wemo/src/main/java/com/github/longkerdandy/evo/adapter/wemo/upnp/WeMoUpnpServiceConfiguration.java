@@ -5,7 +5,6 @@ import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
 import org.fourthline.cling.binding.xml.ServiceDescriptorBinder;
 import org.fourthline.cling.model.Namespace;
 import org.fourthline.cling.model.types.ServiceType;
-import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
 
 /**

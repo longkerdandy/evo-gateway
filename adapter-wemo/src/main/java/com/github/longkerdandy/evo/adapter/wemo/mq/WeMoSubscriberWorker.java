@@ -48,44 +48,50 @@ public class WeMoSubscriberWorker extends JedisPubSub {
             // parse json
             JavaType type = ObjectMapper.getTypeFactory().constructParametrizedType(Message.class, Message.class, JsonNode.class);
             Message<JsonNode> msg = ObjectMapper.readValue(message, type);
-            // check device id not empty
+
+            logger.debug("Received message {} {}", msg.getMsgType(), msg.getMsgId());
+
+            // check device id
             String deviceId = msg.getTo();
             if (StringUtils.isBlank(deviceId)) {
-                logger.warn("Empty device id, message {} dropped", msg.getMsgId());
-            } else {
-                // check device model exist
-                String deviceModel = this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_MODEL);
-                if (StringUtils.isBlank(deviceModel)) {
-                    logger.warn("Unknown device {}, message {} dropped", deviceId, msg.getMsgId());
-                } else {
-                    // check matching handler
-                    WeMoHandler handler = WeMoConst.getHandlerByModel(this.handlers, deviceModel);
-                    if (handler == null) {
-                        logger.warn("Unknown device model {}, message {} dropped", deviceModel, msg.getMsgId());
-                    } else {
-                        if (!"1".equals(this.storage.getDeviceConn(deviceId, Scheme.DEVICE_CONN_STATE))) {
-                            logger.debug("Device offline, message {} cached", msg.getMsgId());
-                        } else {
-                            RemoteDevice device = this.upnpService.getRegistry().getRemoteDevice(
-                                    // TODO: UDN
-                                    new UDN(this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_SERIAL_NUMBER)), false);
-                            if (device == null) {
-                                logger.error("Device {} not existed in UPnP service stack, message {} dropped", deviceId, msg.getMsgId());
-                            } else {
-                                switch (msg.getMsgType()) {
-                                    case MessageType.ACTION:
-                                        handler.executeActionMessage(device, MessageFactory.newMessage(msg, ObjectMapper.treeToValue(msg.getPayload(), Action.class)));
-                                        break;
-                                    default:
-                                        logger.warn("Unexpected message type {}, message {} dropped", msg.getMsgType(), msg.getMsgId());
-                                }
-                            }
-                        }
-                    }
+                logger.warn("Device id not provided, message {} dropped", msg.getMsgId());
+                return;
+            }
+            // check device model
+            String deviceModel = this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_MODEL);
+            if (StringUtils.isBlank(deviceModel)) {
+                logger.warn("Device {} not exist, message {} dropped", deviceId, msg.getMsgId());
+                return;
+            }
+            // check handler
+            WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, deviceModel);
+
+            // device offline
+            if (!"1".equals(this.storage.getDeviceConn(deviceId, Scheme.DEVICE_CONN_STATE))) {
+                logger.debug("Device offline, message {} cached", msg.getMsgId());
+            }
+            // device online
+            else {
+                // check UPnP registry
+                RemoteDevice device = this.upnpService.getRegistry().getRemoteDevice(new UDN(this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_UDN)), false);
+                if (device == null) {
+                    logger.error("Device {} not existed in UPnP service stack, message {} dropped", deviceId, msg.getMsgId());
+                    return;
+                }
+
+                // let handler deal with the message
+                switch (msg.getMsgType()) {
+                    case MessageType.ACTION:
+                        handler.executeActionMessage(device, MessageFactory.newMessage(msg, ObjectMapper.treeToValue(msg.getPayload(), Action.class)));
+                        break;
+                    default:
+                        logger.warn("Unexpected message type {}, message {} dropped", msg.getMsgType(), msg.getMsgId());
                 }
             }
         } catch (IOException e) {
             logger.warn("Parse json message with error: {}", ExceptionUtils.getMessage(e));
+        } catch (Exception e) {
+            logger.warn("Validate json message with error: {}", ExceptionUtils.getMessage(e));
         }
     }
 }

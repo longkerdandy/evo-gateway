@@ -9,6 +9,7 @@ import com.github.longkerdandy.evo.api.protocol.Const;
 import com.github.longkerdandy.evo.api.protocol.DeviceType;
 import com.github.longkerdandy.evo.api.protocol.OverridePolicy;
 import com.github.longkerdandy.evo.api.util.UuidUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
@@ -56,27 +57,52 @@ public class WeMoSwitchHandler implements WeMoHandler {
         Service service = device.findService(new ServiceId("Belkin", "basicevent1"));
 
         return new WeMoSubscriptionCallback(deviceId, UuidUtils.shortUuid(), this.storage, service, 600) {
+
             @Override
             @SuppressWarnings("unchecked")
             protected void eventReceived(GENASubscription subscription) {
                 String sequence = String.valueOf(subscription.getCurrentSequence().getValue());
-                logger.info("Received event from WeMo Switch {} with sequence id {}", this.deviceId, sequence);
+                logger.info("Received event from device (switch) {} with sequence id {}", this.deviceId, sequence);
 
                 // update device
                 Map<String, StateVariableValue> values = subscription.getCurrentValues();
                 String state = String.valueOf(values.get("BinaryState").getValue());
-                logger.debug("WeMo Switch {} state now is {}", this.deviceId, state);
+                logger.debug("Device (switch) {} state now is {}", this.deviceId, state);
 
-                // send message
+                // when subscription established
                 if (sequence.equals("0")) {
+                    // update switch state
                     this.storage.updateDeviceAttr(this.deviceId, WeMoConst.ATTRIBUTE_SWITCH_STATE, state);
+                    // send connect message
                     sendConnectMessage(this.deviceId);
-                } else {
-                    sendTriggerMessage(deviceId, state);
-                    this.storage.updateDeviceAttr(this.deviceId, WeMoConst.ATTRIBUTE_SWITCH_STATE, state);
+                }
+                // after subscription established
+                else {
+                    // compare with current state in storage
+                    String currentState = this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_SWITCH_STATE);
+                    if (!state.equals(currentState)) {
+                        // update switch state
+                        this.storage.updateDeviceAttr(this.deviceId, WeMoConst.ATTRIBUTE_SWITCH_STATE, state);
+                        // compare and send trigger message
+                        sendTriggerMessage(deviceId, state);
+                    }
                 }
             }
         };
+    }
+
+    public void sendTriggerMessage(String deviceId, String state) {
+        // attribute
+        Map<String, Object> attr = new HashMap<>();
+        attr.put(WeMoConst.ATTRIBUTE_SWITCH_STATE, NumberUtils.toInt(state));
+        // trigger id
+        String triggerId = WeMoConst.TRIGGER_SWITCH_STATE_CHANGED;
+        // message
+        Message<Trigger> msg = MessageFactory.newTriggerMessage(
+                Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID,
+                triggerId, OverridePolicy.UPDATE_IF_NEWER, attr);
+        // push to mq
+        this.publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }
 
     @Override
@@ -93,7 +119,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
                 Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID,
                 null, null, null, OverridePolicy.REPLACE, newAttr);
         // push to mq
-        publisher.sendMessage(Topics.CLOUD_ADAPTER, msg);
+        publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }
 
     @Override
@@ -102,51 +128,52 @@ public class WeMoSwitchHandler implements WeMoHandler {
         Message<Disconnect> msg = MessageFactory.newDisconnectMessage(
                 Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID);
         // push to mq
-        publisher.sendMessage(Topics.CLOUD_ADAPTER, msg);
+        publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void executeActionMessage(RemoteDevice device, Message<Action> msg) {
+        // check payload
+        Action action = msg.getPayload();
+        if (action == null) {
+            logger.warn("Action payload not provided, message {} dropped", msg.getMsgId());
+            return;
+        }
+
+        // check action id
+        if (!WeMoConst.ACTION_SWITCH_SET_STATE.equals(action.getActionId())) {
+            logger.warn("Unknown action id {}, message {} dropped", action.getActionId(), msg.getMsgId());
+            return;
+        }
+
+        // check state
+        String state = String.valueOf(msg.getPayload().getAttributes().get(WeMoConst.ATTRIBUTE_SWITCH_STATE));
+        if (StringUtils.isBlank(state) || !(state.equals("1") || state.equals("0"))) {
+            logger.warn("Unknown state value {}, message {} dropped", state, msg.getMsgId());
+            return;
+        }
+
         // WeMo basic event service
         Service service = device.findService(new ServiceId("Belkin", "basicevent1"));
 
         // SetBinaryState action
-        String state = String.valueOf(msg.getPayload().getAttributes().get(WeMoConst.ATTRIBUTE_SWITCH_STATE));
         ActionInvocation setBinaryStateInvocation = new ActionInvocation(service.getAction("SetBinaryState"));
         setBinaryStateInvocation.setInput("BinaryState", state);
         ActionCallback setBinaryStateCallback = new ActionCallback(setBinaryStateInvocation) {
 
             @Override
             public void success(ActionInvocation invocation) {
-                logger.debug("Successful set WeMo Switch {} state to {}", msg.getTo(), state);
+                logger.debug("Successful set device (switch) {} state to {}", msg.getTo(), state);
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                logger.debug("Failed to set WeMo Switch {} state: {}", msg.getTo(), defaultMsg);
+                logger.debug("Failed to set device (switch) {} state to {}: {}", msg.getTo(), state, defaultMsg);
             }
         };
 
         // execute action
         upnpService.getControlPoint().execute(setBinaryStateCallback);
-    }
-
-    public void sendTriggerMessage(String deviceId, String state) {
-        // compare with current state in storage
-        String currentState = this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_SWITCH_STATE);
-        if (!state.equals(currentState)) {
-            // attribute
-            Map<String, Object> attr = new HashMap<>();
-            attr.put(WeMoConst.ATTRIBUTE_SWITCH_STATE, NumberUtils.toInt(state));
-            // trigger id
-            String triggerId = state.equals("1") ? WeMoConst.TRIGGER_SWITCH_ON : WeMoConst.TRIGGER_SWITCH_OFF;
-            // message
-            Message<Trigger> msg = MessageFactory.newTriggerMessage(
-                    Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID,
-                    triggerId, OverridePolicy.UPDATE_IF_NEWER, attr);
-            // push to mq
-            this.publisher.sendMessage(Topics.CLOUD_ADAPTER, msg);
-        }
     }
 }

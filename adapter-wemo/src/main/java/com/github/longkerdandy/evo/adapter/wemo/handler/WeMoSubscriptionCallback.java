@@ -47,33 +47,33 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
 
     @Override
     protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
-        logger.debug("Device {} GENA failed: {}", this.deviceId, defaultMsg);
+        logger.debug("Device {} subscription {} failed: {}", this.deviceId, this.subscriptionId, defaultMsg);
         checkAndEmptySub();
     }
 
     @Override
     protected void established(GENASubscription subscription) {
-        logger.debug("Device {} GENA established with subscription id {}", this.deviceId, this.subscriptionId);
+        logger.debug("Device {} subscription {} established", this.deviceId, this.subscriptionId);
     }
 
     @Override
     protected void ended(GENASubscription subscription, CancelReason reason, UpnpResponse responseStatus) {
-        logger.debug("Device {} GENA ended with reason: {}", this.deviceId, reason);
+        logger.debug("Device {} subscription {} ended with reason: {}", this.deviceId, this.subscriptionId, reason);
         checkAndEmptySub();
     }
 
     @Override
     protected void eventsMissed(GENASubscription subscription, int numberOfMissedEvents) {
-        logger.debug("Device GENA missed {} events", numberOfMissedEvents);
+        logger.debug("Device {} subscription {} missed {} events", this.deviceId, this.subscriptionId, numberOfMissedEvents);
     }
 
     /**
      * Check if subscription id is the same then set to empty
      */
     protected void checkAndEmptySub() {
-        if (subscriptionId.equals(this.storage.getDeviceSub(this.deviceId, WeMoScheme.DEVICE_SUB_ID))) {
+        if (this.subscriptionId.equals(this.storage.getDeviceSub(this.deviceId, WeMoScheme.DEVICE_SUB_ID))) {
             this.storage.updateDeviceSub(this.deviceId, "");
-            logger.debug("Device {} subscription set to empty");
+            logger.debug("Clear device {} subscription {}", this.deviceId, this.subscriptionId);
         }
     }
 }

@@ -24,14 +24,13 @@ import java.util.*;
  */
 public class WeMoAdapter {
 
-    // Logger
-    private static final Logger logger = LoggerFactory.getLogger(WeMoAdapter.class);
-
     // Adapter Information
     public static final String ID = "wemo";
     public static final String NAME = "Belkin WeMo Adapater";
     public static final String VERSION = "1.0";
     public static final String CALLBACK = Topics.DEVICE_ADAPTER(ID);
+    // Logger
+    private static final Logger logger = LoggerFactory.getLogger(WeMoAdapter.class);
 
     public static void main(String[] args) throws Exception {
         // redis storage
@@ -73,6 +72,7 @@ public class WeMoAdapter {
             @Override
             public void run() {
                 upnpService.getControlPoint().search(new ServiceTypeHeader(new ServiceType("Belkin", "basicevent", 1)));
+                logger.debug("Send SSDP search message for belkin wemo devices");
             }
         };
         timer.scheduleAtFixedRate(task, 0, 60000);
