@@ -5,9 +5,7 @@ import com.github.longkerdandy.evo.adapter.wemo.storage.WeMoRedisStorage;
 import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.mq.Publisher;
 import com.github.longkerdandy.evo.api.mq.Topics;
-import com.github.longkerdandy.evo.api.protocol.Const;
-import com.github.longkerdandy.evo.api.protocol.DeviceType;
-import com.github.longkerdandy.evo.api.protocol.OverridePolicy;
+import com.github.longkerdandy.evo.api.protocol.*;
 import com.github.longkerdandy.evo.api.util.UuidUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -99,7 +97,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
         String triggerId = WeMoConst.TRIGGER_SWITCH_STATE_CHANGED;
         // message
         Message<Trigger> msg = MessageFactory.newTriggerMessage(
-                Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID,
+                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID,
                 triggerId, OverridePolicy.UPDATE_IF_NEWER, attr);
         // push to mq
         this.publisher.sendMessage(Topics.DEVICE_EVENT, msg);
@@ -116,7 +114,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
         newAttr.put(WeMoConst.ATTRIBUTE_SWITCH_STATE, NumberUtils.toInt(currentAttr.get(WeMoConst.ATTRIBUTE_SWITCH_STATE)));
         // message
         Message<Connect> msg = MessageFactory.newConnectMessage(
-                Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID,
+                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID,
                 null, null, null, OverridePolicy.REPLACE, newAttr);
         // push to mq
         publisher.sendMessage(Topics.DEVICE_EVENT, msg);
@@ -126,7 +124,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
     public void sendDisconnectMessage(String deviceId) {
         // message
         Message<Disconnect> msg = MessageFactory.newDisconnectMessage(
-                Const.PROTOCOL_TCP_1_0, DeviceType.DEVICE, deviceId, Const.PLATFORM_ID);
+                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID);
         // push to mq
         publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }

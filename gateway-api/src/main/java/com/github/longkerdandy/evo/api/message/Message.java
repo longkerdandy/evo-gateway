@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @SuppressWarnings("unused")
 public class Message<T> {
 
+    // Message Size
+    public static final int MESSAGE_MAX_BYTES = 8092;
+
     @JsonIgnore
     protected int protocol;           // Protocol
     protected int msgType;            // Message Type (payload)
