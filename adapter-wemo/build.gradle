@@ -3,7 +3,7 @@ version = '1.0.0'
 
 // Dependencies
 dependencies {
-    // Api
+    // Gateway Api
     compile project(':gateway-api')
 
     // Cling
@@ -14,9 +14,6 @@ dependencies {
 
     // XML
     compile 'com.thoughtworks.xstream:xstream:1.4.8'
-
-    // UUID
-    compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
 
     // Logger Bridge
     compile 'org.slf4j:jul-to-slf4j:1.7.12'

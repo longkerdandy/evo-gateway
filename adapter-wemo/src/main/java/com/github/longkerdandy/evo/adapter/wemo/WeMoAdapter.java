@@ -21,7 +21,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.util.*;
 
 /**
- * Belkin WeMo adapter
+ * Belkin WeMo Adapter
  */
 public class WeMoAdapter {
 
