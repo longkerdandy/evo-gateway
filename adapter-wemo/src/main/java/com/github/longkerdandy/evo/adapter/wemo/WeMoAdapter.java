@@ -70,10 +70,6 @@ public class WeMoAdapter {
         subscriber.subscribe(CALLBACK, factory);
         logger.info("Message queue subscriber started");
 
-        // send a ssdp search for belkin wemo devices
-        upnpService.getControlPoint().search(new ServiceTypeHeader(new ServiceType("Belkin", "basicevent", 1)));  // common
-        logger.debug("Send SSDP search message for belkin wemo devices");
-
         // send scheduled ssdp search for belkin wemo devices
         Timer timer = new Timer(true);
         TimerTask task = new TimerTask() {

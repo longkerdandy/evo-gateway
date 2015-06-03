@@ -27,6 +27,7 @@ public class WeMoConst {
     public static final String ATTRIBUTE_UDN = "udn";                       // adapter only
     public static final String ATTRIBUTE_DESCRIPTOR_URL = "desc_url";       // adapter only
     public static final String ATTRIBUTE_SWITCH_STATE = "state";
+
     private WeMoConst() {
     }
 

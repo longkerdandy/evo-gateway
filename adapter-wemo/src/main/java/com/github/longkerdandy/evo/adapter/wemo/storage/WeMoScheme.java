@@ -7,6 +7,7 @@ public class WeMoScheme {
 
     public static final String DEVICE_SUB_ID = "sub_state";
     public static final String DEVICE_SUB_TIMESTAMP = "sub_timestamp";
+
     private WeMoScheme() {
     }
 
