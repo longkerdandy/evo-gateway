@@ -1,0 +1,11 @@
+// Project Version
+version = '1.0.0'
+
+// Dependencies
+dependencies {
+    // Gateway Api
+    compile project(':gateway-api')
+
+    // Netty
+    compile 'io.netty:netty-all:4.0.28.Final'
+}
