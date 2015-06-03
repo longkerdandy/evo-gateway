@@ -41,7 +41,7 @@ public class Subscriber {
     /**
      * Subscribe to message queue topic
      *
-     * @param topic Topic
+     * @param topic   Topic
      * @param factory Worker Factory
      */
     public void subscribe(String topic, SubscriberWorkerFactory factory) {
