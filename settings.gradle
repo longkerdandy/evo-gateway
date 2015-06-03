@@ -1,7 +1,5 @@
 rootProject.name = 'evo-gateway'
 
-include 'adapter-hue'
-
 include 'gateway-api'
 
 include 'adapter-wemo'
