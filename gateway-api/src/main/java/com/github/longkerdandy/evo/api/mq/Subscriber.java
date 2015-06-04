@@ -1,5 +1,6 @@
 package com.github.longkerdandy.evo.api.mq;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -47,6 +48,18 @@ public class Subscriber {
     public void subscribe(String topic, SubscriberWorkerFactory factory) {
         // jedis subscribe method will block
         this.executor.execute(() -> jedis.subscribe(factory.createWorker(), topic));
-        logger.trace("Successful subscribed to mq topic {}", topic);
+        logger.debug("Successful subscribed to mq topic {}", topic);
+    }
+
+    /**
+     * Subscribe to message queue topics
+     *
+     * @param topics  Topics
+     * @param factory Worker Factory
+     */
+    public void subscribe(String[] topics, SubscriberWorkerFactory factory) {
+        // jedis subscribe method will block
+        this.executor.execute(() -> jedis.subscribe(factory.createWorker(), topics));
+        logger.debug("Successful subscribed to mq topic {}", ArrayUtils.toString(topics));
     }
 }

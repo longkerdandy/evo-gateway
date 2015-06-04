@@ -72,6 +72,19 @@ public class RedisStorage {
     }
 
     /**
+     * Get device mapped adapter id
+     *
+     * @param deviceId Device Id
+     * @return Adapter Id
+     */
+    public String getDeviceMapping(String deviceId) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            String key = Scheme.DEVICE_MAPPING;
+            return jedis.hget(key, deviceId);
+        }
+    }
+
+    /**
      * Get device connection information
      *
      * @param deviceId Device Id
