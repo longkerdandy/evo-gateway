@@ -3,11 +3,11 @@ package com.github.longkerdandy.evo.adapter.evo;
 import com.github.longkerdandy.evo.adapter.evo.mq.EvoSubscriberWorkerFactory;
 import com.github.longkerdandy.evo.adapter.evo.storage.EvoRedisStorage;
 import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClient;
-import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClientHandler;
 import com.github.longkerdandy.evo.api.mq.Publisher;
 import com.github.longkerdandy.evo.api.mq.Subscriber;
 import com.github.longkerdandy.evo.api.mq.Topics;
 import com.github.longkerdandy.evo.api.storage.Scheme;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +28,10 @@ public class EvoAdapter {
     private static final Logger logger = LoggerFactory.getLogger(EvoAdapter.class);
 
     public static void main(String[] args) throws Exception {
+        // load config
+        String f = args.length >= 1 ? args[0] : "config/tcp.properties";
+        PropertiesConfiguration config = new PropertiesConfiguration(f);
+
         // redis storage
         EvoRedisStorage storage = new EvoRedisStorage();
 
@@ -40,16 +44,16 @@ public class EvoAdapter {
         Publisher publisher = new Publisher();
         logger.info("Message queue publisher started");
 
-        // create message queue subscriber
-        EvoSubscriberWorkerFactory factory = new EvoSubscriberWorkerFactory();
-        Subscriber subscriber = new Subscriber();
-        subscriber.subscribe(new String[] {Topics.DEVICE_EVENT, CALLBACK}, factory);
-        logger.info("Message queue subscriber started");
-
-        // start tcp client
-        TcpClient tcp = new TcpClient("", 0, new TcpClientHandler(storage, publisher));
+        // create tcp client
+        TcpClient tcp = new TcpClient(config.getString("evo.host"), config.getInt("evo.port"), storage, publisher);
         Thread thread = new Thread(tcp);
         thread.start();
+
+        // create message queue subscriber
+        EvoSubscriberWorkerFactory factory = new EvoSubscriberWorkerFactory(tcp.getHandler());
+        Subscriber subscriber = new Subscriber();
+        subscriber.subscribe(new String[]{Topics.DEVICE_EVENT, CALLBACK}, factory);
+        logger.info("Message queue subscriber started");
     }
 
     /**

@@ -1,10 +1,17 @@
+apply plugin: 'application'
+
 // Project Version
 version = '1.0.0'
+
+mainClassName = "com.github.longkerdandy.evo.adapter.evo.EvoAdapter"
 
 // Dependencies
 dependencies {
     // Gateway Api
     compile project(':gateway-api')
+
+    // Commons Configuration
+    compile 'commons-configuration:commons-configuration:1.10'
 
     // Netty
     compile 'io.netty:netty-all:4.0.28.Final'

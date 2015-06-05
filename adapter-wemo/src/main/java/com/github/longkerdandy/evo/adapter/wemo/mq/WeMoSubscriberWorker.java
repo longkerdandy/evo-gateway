@@ -49,7 +49,7 @@ public class WeMoSubscriberWorker extends JedisPubSub {
             JavaType type = ObjectMapper.getTypeFactory().constructParametrizedType(Message.class, Message.class, JsonNode.class);
             Message<JsonNode> msg = ObjectMapper.readValue(message, type);
 
-            logger.debug("Received message {} {}", msg.getMsgType(), msg.getMsgId());
+            logger.debug("Received message {} {} on topic {}", msg.getMsgType(), msg.getMsgId(), channel);
 
             // check device id
             String deviceId = msg.getTo();
