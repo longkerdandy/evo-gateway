@@ -203,14 +203,16 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    logger.debug("Message {} {} has been sent to device {} successfully",
+                    logger.debug("Message {} {} has been sent from {} to {} successfully",
                             msg.getMsgType(),
                             msg.getMsgId(),
+                            msg.getFrom(),
                             StringUtils.defaultIfBlank(msg.getTo(), "<null>"));
                 } else {
-                    logger.debug("Message {} {} failed to send to device {}: {}",
+                    logger.debug("Message {} {} failed to send from {} to {}: {}",
                             msg.getMsgType(),
                             msg.getMsgId(),
+                            msg.getFrom(),
                             StringUtils.defaultIfBlank(msg.getTo(), "<null>"),
                             ExceptionUtils.getMessage(future.cause()));
                 }

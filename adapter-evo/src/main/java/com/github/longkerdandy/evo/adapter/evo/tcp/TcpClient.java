@@ -23,12 +23,15 @@ public class TcpClient implements Runnable {
 
     private final String host;
     private final int port;
-    private final TcpClientHandler handler;
+    private final RedisStorage storage;
+    private final Publisher publisher;
+    private volatile TcpClientHandler handler; // make it thread safe
 
     public TcpClient(String host, int port, RedisStorage storage, Publisher publisher) {
         this.host = host;
         this.port = port;
-        this.handler = new TcpClientHandler(storage, publisher, this);
+        this.storage = storage;
+        this.publisher = publisher;
     }
 
     public TcpClientHandler getHandler() {
@@ -37,7 +40,7 @@ public class TcpClient implements Runnable {
 
     @Override
     public void run() {
-        // configure the client
+        // re-used event loop
         EventLoopGroup workerGroup = new NioEventLoopGroup(1);
 
         // enter the connect loop
@@ -51,6 +54,9 @@ public class TcpClient implements Runnable {
      * @param eventLoop EventLoopGroup
      */
     public void connect(EventLoopGroup eventLoop) {
+        // create new handler
+        TcpClientHandler h = new TcpClientHandler(this.storage, publisher, this);
+        this.handler = h;
         // create bootstrap
         Bootstrap b = new Bootstrap();
         b.group(eventLoop);
@@ -64,14 +70,16 @@ public class TcpClient implements Runnable {
                 p.addLast(new Encoder());
                 p.addLast(new Decoder());
                 // handler
-                p.addLast(handler);
+                p.addLast(h);
             }
         });
 
         // start the client
         b.connect(this.host, this.port).addListener((ChannelFuture f) -> {
             // reconnect if failed
-            if (!f.isSuccess()) {
+            if (f.isSuccess()) {
+                logger.debug("Connect to Evolution platform succeeded");
+            } else {
                 logger.debug("Connect to Evolution platform failed, reconnect after 15 seconds");
                 f.channel().eventLoop().schedule(() -> connect(f.channel().eventLoop()), 15, TimeUnit.SECONDS);
             }

@@ -1,5 +1,9 @@
+apply plugin: 'application'
+
 // Project Version
 version = '1.0.0'
+
+mainClassName = "com.github.longkerdandy.evo.adapter.wemo.WeMoAdapter"
 
 // Dependencies
 dependencies {

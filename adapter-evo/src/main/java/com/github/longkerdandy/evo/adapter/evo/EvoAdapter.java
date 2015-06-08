@@ -50,7 +50,7 @@ public class EvoAdapter {
         thread.start();
 
         // create message queue subscriber
-        EvoSubscriberWorkerFactory factory = new EvoSubscriberWorkerFactory(tcp.getHandler());
+        EvoSubscriberWorkerFactory factory = new EvoSubscriberWorkerFactory(tcp);
         Subscriber subscriber = new Subscriber();
         subscriber.subscribe(new String[]{Topics.DEVICE_EVENT, CALLBACK}, factory);
         logger.info("Message queue subscriber started");

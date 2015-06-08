@@ -2,7 +2,7 @@ package com.github.longkerdandy.evo.adapter.evo.mq;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClientHandler;
+import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClient;
 import com.github.longkerdandy.evo.api.message.Message;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -21,10 +21,10 @@ public class EvoSubscriberWorker extends JedisPubSub {
     // Logger
     private static final Logger logger = LoggerFactory.getLogger(EvoSubscriberWorker.class);
 
-    private final TcpClientHandler handler;
+    private final TcpClient client;
 
-    public EvoSubscriberWorker(TcpClientHandler handler) {
-        this.handler = handler;
+    public EvoSubscriberWorker(TcpClient client) {
+        this.client = client;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class EvoSubscriberWorker extends JedisPubSub {
             // todo: validate message
 
             // send message
-            this.handler.sendMessage(msg);
+            this.client.getHandler().sendMessage(msg);
         } catch (IOException e) {
             logger.warn("Parse json message with error: {}", ExceptionUtils.getMessage(e));
         }

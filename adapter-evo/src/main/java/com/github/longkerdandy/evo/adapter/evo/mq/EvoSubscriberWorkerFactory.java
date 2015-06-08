@@ -1,6 +1,6 @@
 package com.github.longkerdandy.evo.adapter.evo.mq;
 
-import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClientHandler;
+import com.github.longkerdandy.evo.adapter.evo.tcp.TcpClient;
 import com.github.longkerdandy.evo.api.mq.SubscriberWorkerFactory;
 
 /**
@@ -8,14 +8,14 @@ import com.github.longkerdandy.evo.api.mq.SubscriberWorkerFactory;
  */
 public class EvoSubscriberWorkerFactory implements SubscriberWorkerFactory<EvoSubscriberWorker> {
 
-    private final TcpClientHandler handler;
+    private final TcpClient client;
 
-    public EvoSubscriberWorkerFactory(TcpClientHandler handler) {
-        this.handler = handler;
+    public EvoSubscriberWorkerFactory(TcpClient client) {
+        this.client = client;
     }
 
     @Override
     public EvoSubscriberWorker createWorker() {
-        return new EvoSubscriberWorker(this.handler);
+        return new EvoSubscriberWorker(this.client);
     }
 }

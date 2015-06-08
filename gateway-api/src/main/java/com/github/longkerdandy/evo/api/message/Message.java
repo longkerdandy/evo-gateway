@@ -1,7 +1,5 @@
 package com.github.longkerdandy.evo.api.message;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * Message
  * Base message & carrier for all other messages
@@ -12,7 +10,6 @@ public class Message<T> {
     // Message Size
     public static final int MESSAGE_MAX_BYTES = 8092;
 
-    @JsonIgnore
     protected int protocol;           // Protocol
     protected int msgType;            // Message Type (payload)
     protected int qos;                // QoS Level
