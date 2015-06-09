@@ -8,7 +8,7 @@ package com.github.longkerdandy.evo.api.message;
 public class Message<T> {
 
     // Message Size
-    public static final int MESSAGE_MAX_BYTES = 8092;
+    public static final int MAX_BYTES = 8092;
 
     protected int protocol;           // Protocol
     protected int msgType;            // Message Type (payload)

@@ -95,7 +95,7 @@ public class Decoder extends ByteToMessageDecoder {
         in.readUnsignedByte();
         // header 7-10 remaining length
         int remainingLength = decodeRemainingLength(in);
-        if (remainingLength > Message.MESSAGE_MAX_BYTES) {
+        if (remainingLength > Message.MAX_BYTES) {
             in.clear();
             throw new DecoderException("Message size is too large: " + remainingLength + " bytes");
         }

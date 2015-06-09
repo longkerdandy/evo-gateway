@@ -6,7 +6,7 @@ package com.github.longkerdandy.evo.api.protocol;
 public class Evolution {
 
     // Platform Id
-    public static final String ID = "t4a06cp26kom";
+    public static final String ID = "evolution";
 
     private Evolution() {
     }

@@ -67,7 +67,7 @@ public class Encoder extends MessageToByteEncoder<Message> {
 
         // header
         int remainingLength = bytes.length;
-        if (remainingLength > Message.MESSAGE_MAX_BYTES) {
+        if (remainingLength > Message.MAX_BYTES) {
             throw new EncoderException("Message size is too large: " + remainingLength + " bytes");
         }
         out.writeByte(0x45);
