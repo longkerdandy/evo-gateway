@@ -1,5 +1,6 @@
 package com.github.longkerdandy.evo.adapter.wemo.upnp;
 
+import com.github.longkerdandy.evo.adapter.wemo.WeMoAdapter;
 import com.github.longkerdandy.evo.adapter.wemo.WeMoConst;
 import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoHandler;
 import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoSubscriptionCallback;
@@ -76,6 +77,8 @@ public class WeMoRegistryListener implements RegistryListener {
 
         WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, model);
 
+        // update device mapping
+        this.storage.updateDeviceMapping(deviceId, WeMoAdapter.ID);
         // update device connection state
         this.storage.updateDeviceConn(deviceId, "1");
         // update device attribute
