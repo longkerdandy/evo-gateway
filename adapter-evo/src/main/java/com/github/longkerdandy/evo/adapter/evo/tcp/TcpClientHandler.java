@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,7 +34,7 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
     private final Publisher publisher;
     private final TcpClient client;
     // Connected Devices
-    private final Set<String> devices = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<String> cd = Collections.newSetFromMap(new ConcurrentHashMap<>());
     // Channel Context
     private ChannelHandlerContext ctx;
 
@@ -101,7 +102,7 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
 
         // mark device as connected
         if (msg.getPayload().getReturnCode() == ConnAck.RECEIVED) {
-            this.devices.add(msg.getTo());
+            this.cd.add(msg.getTo());
 
             // todo: send cached messages
         }
@@ -178,12 +179,12 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
 
         // if disconnect, remove from connected devices
         if (msg.getMsgType() == MessageType.DISCONNECT) {
-            this.devices.remove(msg.getFrom());
+            this.cd.remove(msg.getFrom());
         }
 
         // if trigger or action, check if connected
         if ((msg.getMsgType() == MessageType.TRIGGER || msg.getMsgType() == MessageType.ACTION)
-                && !this.devices.contains(msg.getFrom())) {
+                && !this.cd.contains(msg.getFrom())) {
             // send connect message
             Map<String, Object> attr = getDeviceConnectAttr(msg.getFrom());
             // todo: use correct descriptor id and override policy
