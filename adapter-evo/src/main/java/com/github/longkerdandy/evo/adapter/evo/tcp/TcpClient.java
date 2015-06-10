@@ -57,7 +57,7 @@ public class TcpClient implements Runnable {
         // create new handler
         TcpClientHandler h = new TcpClientHandler(this.storage, publisher, this);
         this.handler = h;
-        // create bootstrap
+        // create new bootstrap
         Bootstrap b = new Bootstrap();
         b.group(eventLoop);
         b.channel(NioSocketChannel.class);
