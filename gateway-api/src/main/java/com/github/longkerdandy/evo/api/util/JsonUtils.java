@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class JsonUtils {
 
     // Global JSON ObjectMapper
-    public static final com.fasterxml.jackson.databind.ObjectMapper ObjectMapper = new ObjectMapper();
+    public static final ObjectMapper ObjectMapper = new ObjectMapper();
 
     static {
         ObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -1,6 +1,9 @@
 package com.github.longkerdandy.evo.api.message;
 
-import com.github.longkerdandy.evo.api.protocol.*;
+import com.github.longkerdandy.evo.api.protocol.DeviceType;
+import com.github.longkerdandy.evo.api.protocol.Evolution;
+import com.github.longkerdandy.evo.api.protocol.MessageType;
+import com.github.longkerdandy.evo.api.protocol.QoS;
 import com.github.longkerdandy.evo.api.util.UuidUtils;
 
 import java.util.Map;
