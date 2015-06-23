@@ -48,6 +48,7 @@ public class EvoAdapter {
         TcpClient tcp = new TcpClient(config.getString("evo.host"), config.getInt("evo.port"), storage, publisher);
         Thread thread = new Thread(tcp);
         thread.start();
+        logger.info("TCP client started");
 
         // create message queue subscriber
         EvoSubscriberWorkerFactory factory = new EvoSubscriberWorkerFactory(tcp);
