@@ -1,7 +1,7 @@
 package com.github.longkerdandy.evo.adapter.evo.tcp;
 
+import com.github.longkerdandy.evo.adapter.evo.storage.EvoRedisStorage;
 import com.github.longkerdandy.evo.api.mq.Publisher;
-import com.github.longkerdandy.evo.api.storage.RedisStorage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -23,11 +23,11 @@ public class TcpClient implements Runnable {
 
     private final String host;
     private final int port;
-    private final RedisStorage storage;
+    private final EvoRedisStorage storage;
     private final Publisher publisher;
     private volatile TcpClientHandler handler; // make it thread safe
 
-    public TcpClient(String host, int port, RedisStorage storage, Publisher publisher) {
+    public TcpClient(String host, int port, EvoRedisStorage storage, Publisher publisher) {
         this.host = host;
         this.port = port;
         this.storage = storage;

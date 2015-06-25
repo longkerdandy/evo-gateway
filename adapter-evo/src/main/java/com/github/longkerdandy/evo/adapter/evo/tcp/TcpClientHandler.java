@@ -1,10 +1,13 @@
 package com.github.longkerdandy.evo.adapter.evo.tcp;
 
+import com.github.longkerdandy.evo.adapter.evo.storage.EvoRedisStorage;
 import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.mq.Publisher;
 import com.github.longkerdandy.evo.api.mq.Topics;
-import com.github.longkerdandy.evo.api.protocol.*;
-import com.github.longkerdandy.evo.api.storage.RedisStorage;
+import com.github.longkerdandy.evo.api.protocol.DeviceType;
+import com.github.longkerdandy.evo.api.protocol.MessageType;
+import com.github.longkerdandy.evo.api.protocol.ProtocolType;
+import com.github.longkerdandy.evo.api.protocol.QoS;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -14,23 +17,22 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  * TCP Client Handler
  */
+@SuppressWarnings("unused")
 public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
 
     // Logger
     private static final Logger logger = LoggerFactory.getLogger(TcpClientHandler.class);
 
-    private final RedisStorage storage;
+    private final EvoRedisStorage storage;
     private final Publisher publisher;
     private final TcpClient client;
     // Connected Devices
@@ -38,10 +40,19 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
     // Channel Context
     private ChannelHandlerContext ctx;
 
-    public TcpClientHandler(RedisStorage storage, Publisher publisher, TcpClient client) {
+    public TcpClientHandler(EvoRedisStorage storage, Publisher publisher, TcpClient client) {
         this.storage = storage;
         this.publisher = publisher;
         this.client = client;
+    }
+
+    /**
+     * Connected to the Evolution Platform?
+     *
+     * @return True if connected
+     */
+    public boolean isConnected() {
+        return this.ctx != null;
     }
 
     @Override
@@ -62,6 +73,9 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
         // unset context
         this.ctx = null;
 
+        // clear connected devices
+        this.cd.clear();
+
         // reconnect
         ctx.channel().eventLoop().schedule(() -> this.client.connect(ctx.channel().eventLoop()), 15, TimeUnit.SECONDS);
 
@@ -72,8 +86,6 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
     @Override
     @SuppressWarnings("unchecked")
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        // todo: validate message
-
         switch (msg.getMsgType()) {
             case MessageType.CONNACK:
                 onConnAck(ctx, (Message<ConnAck>) msg);
@@ -103,11 +115,10 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
         // mark device as connected
         if (msg.getPayload().getReturnCode() == ConnAck.RECEIVED) {
             this.cd.add(msg.getTo());
-
-            // todo: send cached messages
         }
 
-        // todo: acknowledge the message from cache
+        // acknowledge the message from cache
+        this.storage.removeCachedMessage(msg.getPayload().getConnMsgId());
     }
 
     /**
@@ -120,7 +131,8 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
     protected void onDisconnAck(ChannelHandlerContext ctx, Message<DisconnAck> msg) {
         logger.debug("Process DisconnAck message {} from {} to {}", msg.getMsgId(), msg.getFrom(), msg.getTo());
 
-        // todo: acknowledge the message from cache
+        // acknowledge the message from cache
+        this.storage.removeCachedMessage(msg.getPayload().getDisconnMsgId());
     }
 
     /**
@@ -133,7 +145,8 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
     protected void onTrigAck(ChannelHandlerContext ctx, Message<TrigAck> msg) {
         logger.debug("Process TrigAck message {} from {} to {}", msg.getMsgId(), msg.getFrom(), msg.getTo());
 
-        // todo: acknowledge the message from cache
+        // acknowledge the message from cache
+        this.storage.removeCachedMessage(msg.getPayload().getTrigMsgId());
     }
 
     /**
@@ -156,9 +169,10 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
 
         // send back acknowledge
         if (msg.getQos() > QoS.MOST_ONCE) {
-            // todo: decide device type based on its descriptor
-            Message<ActAck> ack = MessageFactory.newActAckMessage(ProtocolType.TCP_1_0, DeviceType.DEVICE,
-                    deviceId, msg.getFrom(), msg.getMsgId(), ActAck.RECEIVED);
+            Message<ActAck> ack = MessageFactory.newActAckMessage(
+                    ProtocolType.TCP_1_0, DeviceType.DEVICE,
+                    deviceId, msg.getFrom(),
+                    msg.getMsgId(), ActAck.RECEIVED);
             sendMessage(ack);
         }
 
@@ -172,34 +186,43 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
      * @param msg Message to be sent
      */
     public void sendMessage(Message msg) {
-        if (this.ctx == null) {
-            logger.debug("Not connected to the platform, message {} {} dropped", msg.getMsgType(), msg.getMsgId());
-            return;
+        try {
+            // if disconnect, remove from connected devices
+            if (msg.getMsgType() == MessageType.DISCONNECT) {
+                this.cd.remove(msg.getFrom());
+            }
+
+            // not connected to the platform
+            if (!isConnected()) {
+                logger.trace("Not connected to the platform, message {} {} cached", msg.getMsgType(), msg.getMsgId());
+                this.storage.replaceCachedMessage(msg, 60);
+                return;
+            }
+
+            // device not marked as connected
+            if (msg.getMsgType() != MessageType.CONNECT && !this.cd.contains(msg.getFrom())) {
+                logger.trace("Device {} not marked as connected, message {} {} cached", msg.getFrom(), msg.getMsgType(), msg.getMsgId());
+                this.storage.replaceCachedMessage(msg, 60);
+                return;
+            }
+
+            // send message
+            sendMessage(this.ctx, msg);
+
+            // cache message if QoS > 1
+            if (msg.getQos() > QoS.MOST_ONCE) {
+                this.storage.replaceCachedMessage(msg, 60);
+            }
+        } catch (IOException e) {
+            logger.error("Exception when trying to send message: {}", ExceptionUtils.getMessage(e));
         }
+    }
 
-        // if disconnect, remove from connected devices
-        if (msg.getMsgType() == MessageType.DISCONNECT) {
-            this.cd.remove(msg.getFrom());
-        }
-
-        // if trigger or action, check if connected
-        if ((msg.getMsgType() == MessageType.TRIGGER || msg.getMsgType() == MessageType.ACTION)
-                && !this.cd.contains(msg.getFrom())) {
-            // send connect message
-            Map<String, Object> attr = getDeviceConnectAttr(msg.getFrom());
-            // todo: use correct descriptor id and override policy
-            Message<Connect> conn = MessageFactory.newConnectMessage(ProtocolType.TCP_1_0, DeviceType.DEVICE,
-                    msg.getFrom(), Evolution.ID, null, null, null, OverridePolicy.UPDATE, attr);
-            sendMessage(conn);
-
-            // todo: cache the message
-
-            return;
-        }
-
-        // todo: cache the message if QoS > 0
-
-        ChannelFuture future = this.ctx.writeAndFlush(msg);
+    /**
+     * Send message with specific ChannelHandlerContext
+     */
+    protected void sendMessage(ChannelHandlerContext ctx, Message msg) {
+        ChannelFuture future = ctx.writeAndFlush(msg);
         future.addListener(new GenericFutureListener<ChannelFuture>() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
@@ -208,32 +231,16 @@ public class TcpClientHandler extends SimpleChannelInboundHandler<Message> {
                             msg.getMsgType(),
                             msg.getMsgId(),
                             msg.getFrom(),
-                            StringUtils.defaultIfBlank(msg.getTo(), "<null>"));
+                            msg.getTo());
                 } else {
                     logger.debug("Message {} {} failed to send from {} to {}: {}",
                             msg.getMsgType(),
                             msg.getMsgId(),
                             msg.getFrom(),
-                            StringUtils.defaultIfBlank(msg.getTo(), "<null>"),
+                            msg.getTo(),
                             ExceptionUtils.getMessage(future.cause()));
                 }
             }
         });
-    }
-
-    /**
-     * Get device attribute for Connect message
-     *
-     * @param deviceId Device Id
-     * @return Attribute
-     */
-    protected Map<String, Object> getDeviceConnectAttr(String deviceId) {
-        Map<String, Object> result = new HashMap<>();
-        Map<String, String> attr = this.storage.getDeviceAttr(deviceId);
-        for (Map.Entry<String, String> entry : attr.entrySet()) {
-            // todo: filter attributed based on descriptor
-            result.put(entry.getKey(), entry.getValue());
-        }
-        return result;
     }
 }
