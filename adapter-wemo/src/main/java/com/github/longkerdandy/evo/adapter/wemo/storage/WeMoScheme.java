@@ -1,20 +1,23 @@
 package com.github.longkerdandy.evo.adapter.wemo.storage;
 
+import com.github.longkerdandy.evo.adapter.wemo.WeMoAdapter;
+import com.github.longkerdandy.evo.api.storage.Scheme;
+
 /**
  * Redis Database Scheme for WeMo
  */
 public class WeMoScheme {
 
-    public static final String DEVICE_SUB_ID = "sub_state";
-    public static final String DEVICE_SUB_TIMESTAMP = "sub_timestamp";
+    public static final String GENA_ID = "id";
+    public static final String GENA_TIMESTAMP = "timestamp";
 
     private WeMoScheme() {
     }
 
-    // Device Subscription Key : 'devices:{id}:sub'  Type : Hash
-    // Key : 'sub_state'       Value : Subscription id
-    // Key : 'sub_timestamp'   Value : Subscription timestamp
+    // Device GENA Key : 'adapters:{adapterId}:gena:{deviceId}'  Type : Hash
+    // Key : 'id'          Value : Subscription id
+    // Key : 'timestamp'   Value : Subscription timestamp
     public static String DEVICE_SUB(String deviceId) {
-        return "devices:" + deviceId + ":sub";
+        return Scheme.ADAPTER(WeMoAdapter.ID) + ":gena:" + deviceId;
     }
 }

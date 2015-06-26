@@ -55,8 +55,8 @@ public class WeMoRedisStorage extends RedisStorage {
     public void updateDeviceSub(String deviceId, String subscriptionId) {
         try (Jedis jedis = this.jedisPool.getResource()) {
             Map<String, String> sub = new HashMap<>();
-            sub.put(WeMoScheme.DEVICE_SUB_ID, subscriptionId);
-            sub.put(WeMoScheme.DEVICE_SUB_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+            sub.put(WeMoScheme.GENA_ID, subscriptionId);
+            sub.put(WeMoScheme.GENA_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
             String key = WeMoScheme.DEVICE_SUB(deviceId);
             jedis.hmset(key, sub);
         }

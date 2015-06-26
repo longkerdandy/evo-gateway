@@ -71,7 +71,7 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
      * Check if subscription id is the same then set to empty
      */
     protected void checkAndEmptySub() {
-        if (this.subscriptionId.equals(this.storage.getDeviceSub(this.deviceId, WeMoScheme.DEVICE_SUB_ID))) {
+        if (this.subscriptionId.equals(this.storage.getDeviceSub(this.deviceId, WeMoScheme.GENA_ID))) {
             this.storage.updateDeviceSub(this.deviceId, "");
             logger.debug("Clear device {} subscription {}", this.deviceId, this.subscriptionId);
         }

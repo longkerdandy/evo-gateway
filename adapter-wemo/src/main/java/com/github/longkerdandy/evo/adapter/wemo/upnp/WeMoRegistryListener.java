@@ -197,8 +197,8 @@ public class WeMoRegistryListener implements RegistryListener {
      * @return True if failed
      */
     protected boolean checkSubFailed(String deviceId) {
-        if (StringUtils.isEmpty(this.storage.getDeviceSub(deviceId, WeMoScheme.DEVICE_SUB_ID))) {
-            long subTs = NumberUtils.toLong(this.storage.getDeviceSub(deviceId, WeMoScheme.DEVICE_SUB_TIMESTAMP), 0);
+        if (StringUtils.isEmpty(this.storage.getDeviceSub(deviceId, WeMoScheme.GENA_ID))) {
+            long subTs = NumberUtils.toLong(this.storage.getDeviceSub(deviceId, WeMoScheme.GENA_TIMESTAMP), 0);
             long connTs = NumberUtils.toLong(this.storage.getDeviceConn(deviceId, Scheme.DEVICE_CONN_TIMESTAMP), 0);
             if (subTs >= connTs && System.currentTimeMillis() - subTs >= 180000) {
                 return true;
