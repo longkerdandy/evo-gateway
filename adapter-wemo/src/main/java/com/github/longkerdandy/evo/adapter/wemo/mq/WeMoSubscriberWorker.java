@@ -1,13 +1,9 @@
 package com.github.longkerdandy.evo.adapter.wemo.mq;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.longkerdandy.evo.adapter.wemo.WeMoConst;
 import com.github.longkerdandy.evo.adapter.wemo.handler.WeMoHandler;
 import com.github.longkerdandy.evo.adapter.wemo.storage.WeMoRedisStorage;
-import com.github.longkerdandy.evo.api.message.Action;
 import com.github.longkerdandy.evo.api.message.Message;
-import com.github.longkerdandy.evo.api.message.MessageFactory;
 import com.github.longkerdandy.evo.api.protocol.MessageType;
 import com.github.longkerdandy.evo.api.storage.Scheme;
 import org.apache.commons.lang3.StringUtils;
@@ -21,8 +17,6 @@ import redis.clients.jedis.JedisPubSub;
 
 import java.io.IOException;
 import java.util.List;
-
-import static com.github.longkerdandy.evo.api.util.JsonUtils.ObjectMapper;
 
 /**
  * Message Queue Subscriber for WeMo
@@ -43,55 +37,47 @@ public class WeMoSubscriberWorker extends JedisPubSub {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onMessage(String channel, String message) {
         try {
             // parse json
-            JavaType type = ObjectMapper.getTypeFactory().constructParametrizedType(Message.class, Message.class, JsonNode.class);
-            Message<JsonNode> msg = ObjectMapper.readValue(message, type);
+            Message msg = Message.parseMessage(message);
 
             logger.debug("Received message {} {} on topic {}", msg.getMsgType(), msg.getMsgId(), channel);
 
-            // check device id
             String deviceId = msg.getTo();
-            if (StringUtils.isBlank(deviceId)) {
-                logger.warn("Device id not provided, message {} dropped", msg.getMsgId());
-                return;
-            }
+
             // check device model
             String deviceModel = this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_MODEL);
             if (StringUtils.isBlank(deviceModel)) {
                 logger.warn("Device {} not exist, message {} dropped", deviceId, msg.getMsgId());
                 return;
             }
+
             // check handler
             WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, deviceModel);
 
-            // device offline
+            // check device online
             if (!"1".equals(this.storage.getDeviceConn(deviceId, Scheme.DEVICE_CONN_STATE))) {
-                logger.debug("Device offline, message {} cached", msg.getMsgId());
+                logger.warn("Device offline, message {} dropped", msg.getMsgId());
+                return;
             }
-            // device online
-            else {
-                // check UPnP registry
-                RemoteDevice device = this.upnpService.getRegistry().getRemoteDevice(new UDN(this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_UDN)), false);
-                if (device == null) {
-                    logger.error("Device {} not existed in UPnP service stack, message {} dropped", deviceId, msg.getMsgId());
-                    return;
-                }
 
-                // let handler deal with the message
-                switch (msg.getMsgType()) {
-                    case MessageType.ACTION:
-                        handler.executeActionMessage(device, MessageFactory.newMessage(msg, ObjectMapper.treeToValue(msg.getPayload(), Action.class)));
-                        break;
-                    default:
-                        logger.warn("Unexpected message type {}, message {} dropped", msg.getMsgType(), msg.getMsgId());
-                }
+            // check UPnP registry
+            RemoteDevice device = this.upnpService.getRegistry().getRemoteDevice(new UDN(this.storage.getDeviceAttr(deviceId, WeMoConst.ATTRIBUTE_UDN)), false);
+            if (device == null) {
+                logger.warn("Device {} not existed in UPnP service stack, message {} dropped", deviceId, msg.getMsgId());
+                return;
+            }
+
+            // let handler deal with the message
+            switch (msg.getMsgType()) {
+                case MessageType.ACTION:
+                    handler.executeActionMessage(device, msg);
+                    break;
             }
         } catch (IOException e) {
             logger.warn("Parse json message with error: {}", ExceptionUtils.getMessage(e));
-        } catch (Exception e) {
-            logger.warn("Validate json message with error: {}", ExceptionUtils.getMessage(e));
         }
     }
 }
