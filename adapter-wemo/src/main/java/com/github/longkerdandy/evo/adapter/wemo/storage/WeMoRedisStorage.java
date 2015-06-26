@@ -9,6 +9,7 @@ import java.util.Map;
 /**
  * Redis Database Access Layer for WeMo Adapter
  */
+@SuppressWarnings("unused")
 public class WeMoRedisStorage extends RedisStorage {
 
     public WeMoRedisStorage() {

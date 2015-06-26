@@ -80,7 +80,7 @@ public class WeMoAdapter {
             }
         };
         timer.scheduleAtFixedRate(task, 0, 60000);
-        logger.debug("SSDP search timer task started");
+        logger.info("SSDP search timer task started");
     }
 
     /**

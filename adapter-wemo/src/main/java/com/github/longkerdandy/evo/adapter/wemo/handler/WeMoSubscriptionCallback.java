@@ -47,24 +47,24 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
 
     @Override
     protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
-        logger.debug("Device {} subscription {} failed: {}", this.deviceId, this.subscriptionId, defaultMsg);
+        logger.info("Device {} subscription {} failed: {}", this.deviceId, this.subscriptionId, defaultMsg);
         checkAndEmptyGENA();
     }
 
     @Override
     protected void established(GENASubscription subscription) {
-        logger.debug("Device {} subscription {} established", this.deviceId, this.subscriptionId);
+        logger.info("Device {} subscription {} established", this.deviceId, this.subscriptionId);
     }
 
     @Override
     protected void ended(GENASubscription subscription, CancelReason reason, UpnpResponse responseStatus) {
-        logger.debug("Device {} subscription {} ended with reason: {}", this.deviceId, this.subscriptionId, reason);
+        logger.info("Device {} subscription {} ended with reason: {}", this.deviceId, this.subscriptionId, reason);
         checkAndEmptyGENA();
     }
 
     @Override
     protected void eventsMissed(GENASubscription subscription, int numberOfMissedEvents) {
-        logger.debug("Device {} subscription {} missed {} events", this.deviceId, this.subscriptionId, numberOfMissedEvents);
+        logger.info("Device {} subscription {} missed {} events", this.deviceId, this.subscriptionId, numberOfMissedEvents);
     }
 
     /**

@@ -43,7 +43,7 @@ public class WeMoSubscriberWorker extends JedisPubSub {
             // parse json
             Message msg = Message.parseMessage(message);
 
-            logger.debug("Received message {} {} on topic {}", msg.getMsgType(), msg.getMsgId(), channel);
+            logger.info("Received message {} {} on topic {}", msg.getMsgType(), msg.getMsgId(), channel);
 
             String deviceId = msg.getTo();
 

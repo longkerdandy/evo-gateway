@@ -49,7 +49,7 @@ public class WeMoRegistryListener implements RegistryListener {
             return;
         }
 
-        logger.debug("Discovery started for device {} {}", model, deviceId);
+        logger.info("Discovery started for device {} {}", model, deviceId);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class WeMoRegistryListener implements RegistryListener {
             return;
         }
 
-        logger.debug("Discovery failed fro device {} {} {}", model, deviceId, ExceptionUtils.getMessage(ex));
+        logger.info("Discovery failed fro device {} {} {}", model, deviceId, ExceptionUtils.getMessage(ex));
     }
 
     @Override
@@ -73,7 +73,7 @@ public class WeMoRegistryListener implements RegistryListener {
             return;
         }
 
-        logger.debug("Remote device {} {} added", model, deviceId);
+        logger.info("Remote device {} {} added", model, deviceId);
 
         WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, model);
 
@@ -100,7 +100,7 @@ public class WeMoRegistryListener implements RegistryListener {
             return;
         }
 
-        logger.debug("Remote device {} {} updated", model, deviceId);
+        logger.info("Remote device {} {} updated", model, deviceId);
 
         WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, model);
 
@@ -140,7 +140,7 @@ public class WeMoRegistryListener implements RegistryListener {
             return;
         }
 
-        logger.debug("Remote device {} {} removed", model, deviceId);
+        logger.info("Remote device {} {} removed", model, deviceId);
 
         WeMoHandler handler = WeMoConst.findHandlerByModel(this.handlers, model);
 
@@ -155,22 +155,22 @@ public class WeMoRegistryListener implements RegistryListener {
 
     @Override
     public void localDeviceAdded(Registry registry, LocalDevice device) {
-        logger.debug("Local device added: {}", device.getDisplayString());
+        logger.info("Local device added: {}", device.getDisplayString());
     }
 
     @Override
     public void localDeviceRemoved(Registry registry, LocalDevice device) {
-        logger.debug("Local device removed: {}", device.getDisplayString());
+        logger.info("Local device removed: {}", device.getDisplayString());
     }
 
     @Override
     public void beforeShutdown(Registry registry) {
-        logger.debug("Before shutdown, the registry has {} devices", registry.getDevices().size());
+        logger.info("Before shutdown, the registry has {} devices", registry.getDevices().size());
     }
 
     @Override
     public void afterShutdown() {
-        logger.debug("Shutdown of registry complete!");
+        logger.info("Shutdown of registry complete!");
     }
 
     /**
