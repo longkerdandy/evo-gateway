@@ -25,9 +25,9 @@ public class WeMoRedisStorage extends RedisStorage {
      * @param deviceId Device Id
      * @return Subscription
      */
-    public Map<String, String> getDeviceSub(String deviceId) {
+    public Map<String, String> getDeviceGENA(String deviceId) {
         try (Jedis jedis = this.jedisPool.getResource()) {
-            String key = WeMoScheme.DEVICE_SUB(deviceId);
+            String key = WeMoScheme.DEVICE_GENA(deviceId);
             return jedis.hgetAll(key);
         }
     }
@@ -39,9 +39,9 @@ public class WeMoRedisStorage extends RedisStorage {
      * @param field    Subscription Field
      * @return Subscription Field Value
      */
-    public String getDeviceSub(String deviceId, String field) {
+    public String getDeviceGENA(String deviceId, String field) {
         try (Jedis jedis = this.jedisPool.getResource()) {
-            String key = WeMoScheme.DEVICE_SUB(deviceId);
+            String key = WeMoScheme.DEVICE_GENA(deviceId);
             return jedis.hget(key, field);
         }
     }
@@ -52,12 +52,12 @@ public class WeMoRedisStorage extends RedisStorage {
      * @param deviceId       Device Id
      * @param subscriptionId Subscription data to be updated
      */
-    public void updateDeviceSub(String deviceId, String subscriptionId) {
+    public void updateDeviceGENA(String deviceId, String subscriptionId) {
         try (Jedis jedis = this.jedisPool.getResource()) {
             Map<String, String> sub = new HashMap<>();
             sub.put(WeMoScheme.GENA_ID, subscriptionId);
             sub.put(WeMoScheme.GENA_TIMESTAMP, String.valueOf(System.currentTimeMillis()));
-            String key = WeMoScheme.DEVICE_SUB(deviceId);
+            String key = WeMoScheme.DEVICE_GENA(deviceId);
             jedis.hmset(key, sub);
         }
     }

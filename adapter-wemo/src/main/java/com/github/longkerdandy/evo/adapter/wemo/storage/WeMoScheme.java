@@ -17,7 +17,7 @@ public class WeMoScheme {
     // Device GENA Key : 'adapters:{adapterId}:gena:{deviceId}'  Type : Hash
     // Key : 'id'          Value : Subscription id
     // Key : 'timestamp'   Value : Subscription timestamp
-    public static String DEVICE_SUB(String deviceId) {
+    public static String DEVICE_GENA(String deviceId) {
         return Scheme.ADAPTER(WeMoAdapter.ID) + ":gena:" + deviceId;
     }
 }
