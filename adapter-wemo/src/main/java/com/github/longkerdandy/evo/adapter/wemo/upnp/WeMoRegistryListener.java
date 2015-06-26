@@ -120,7 +120,7 @@ public class WeMoRegistryListener implements RegistryListener {
             this.upnpService.getControlPoint().execute(subscription);
         }
         // subscription timeout detected
-        else if (checkSubFailed(deviceId)) {
+        else if (checkGENAFailed(deviceId)) {
             logger.debug("Device {} subscription timeout, renew subscription", deviceId);
 
             WeMoSubscriptionCallback subscription = handler.getDeviceSubscription(deviceId, registry, device);
@@ -196,7 +196,7 @@ public class WeMoRegistryListener implements RegistryListener {
      * @param deviceId Device Id
      * @return True if failed
      */
-    protected boolean checkSubFailed(String deviceId) {
+    protected boolean checkGENAFailed(String deviceId) {
         if (StringUtils.isEmpty(this.storage.getDeviceGENA(deviceId, WeMoScheme.GENA_ID))) {
             long subTs = NumberUtils.toLong(this.storage.getDeviceGENA(deviceId, WeMoScheme.GENA_TIMESTAMP), 0);
             long connTs = NumberUtils.toLong(this.storage.getDeviceConn(deviceId, Scheme.DEVICE_CONN_TIMESTAMP), 0);

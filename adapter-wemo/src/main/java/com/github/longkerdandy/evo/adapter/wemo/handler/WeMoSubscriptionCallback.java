@@ -48,7 +48,7 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
     @Override
     protected void failed(GENASubscription subscription, UpnpResponse responseStatus, Exception exception, String defaultMsg) {
         logger.debug("Device {} subscription {} failed: {}", this.deviceId, this.subscriptionId, defaultMsg);
-        checkAndEmptySub();
+        checkAndEmptyGENA();
     }
 
     @Override
@@ -59,7 +59,7 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
     @Override
     protected void ended(GENASubscription subscription, CancelReason reason, UpnpResponse responseStatus) {
         logger.debug("Device {} subscription {} ended with reason: {}", this.deviceId, this.subscriptionId, reason);
-        checkAndEmptySub();
+        checkAndEmptyGENA();
     }
 
     @Override
@@ -70,7 +70,7 @@ public abstract class WeMoSubscriptionCallback extends SubscriptionCallback {
     /**
      * Check if subscription id is the same then set to empty
      */
-    protected void checkAndEmptySub() {
+    protected void checkAndEmptyGENA() {
         if (this.subscriptionId.equals(this.storage.getDeviceGENA(this.deviceId, WeMoScheme.GENA_ID))) {
             this.storage.updateDeviceGENA(this.deviceId, "");
             logger.debug("Clear device {} subscription {}", this.deviceId, this.subscriptionId);

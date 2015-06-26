@@ -5,9 +5,11 @@ import com.github.longkerdandy.evo.adapter.wemo.storage.WeMoRedisStorage;
 import com.github.longkerdandy.evo.api.message.*;
 import com.github.longkerdandy.evo.api.mq.Publisher;
 import com.github.longkerdandy.evo.api.mq.Topics;
-import com.github.longkerdandy.evo.api.protocol.*;
+import com.github.longkerdandy.evo.api.protocol.DeviceType;
+import com.github.longkerdandy.evo.api.protocol.Evolution;
+import com.github.longkerdandy.evo.api.protocol.OverridePolicy;
+import com.github.longkerdandy.evo.api.protocol.ProtocolType;
 import com.github.longkerdandy.evo.api.util.UuidUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
@@ -89,6 +91,12 @@ public class WeMoSwitchHandler implements WeMoHandler {
         };
     }
 
+    /**
+     * Forge and push Trigger Message to message queue
+     *
+     * @param deviceId Device Id
+     * @param state    Switch state
+     */
     public void sendTriggerMessage(String deviceId, String state) {
         // attribute
         Map<String, Object> attr = new HashMap<>();
@@ -97,7 +105,8 @@ public class WeMoSwitchHandler implements WeMoHandler {
         String triggerId = WeMoConst.TRIGGER_SWITCH_STATE_CHANGED;
         // message
         Message<Trigger> msg = MessageFactory.newTriggerMessage(
-                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID,
+                ProtocolType.TCP_1_0, DeviceType.DEVICE,
+                deviceId, Evolution.ID,
                 triggerId, OverridePolicy.UPDATE_IF_NEWER, attr);
         // push to mq
         this.publisher.sendMessage(Topics.DEVICE_EVENT, msg);
@@ -114,8 +123,10 @@ public class WeMoSwitchHandler implements WeMoHandler {
         newAttr.put(WeMoConst.ATTRIBUTE_SWITCH_STATE, NumberUtils.toInt(currentAttr.get(WeMoConst.ATTRIBUTE_SWITCH_STATE)));
         // message
         Message<Connect> msg = MessageFactory.newConnectMessage(
-                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID,
-                null, null, null, OverridePolicy.REPLACE, newAttr);
+                ProtocolType.TCP_1_0, DeviceType.DEVICE,
+                deviceId, Evolution.ID, null,
+                null, null,
+                OverridePolicy.REPLACE, newAttr);
         // push to mq
         publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }
@@ -124,7 +135,8 @@ public class WeMoSwitchHandler implements WeMoHandler {
     public void sendDisconnectMessage(String deviceId) {
         // message
         Message<Disconnect> msg = MessageFactory.newDisconnectMessage(
-                ProtocolType.TCP_1_0, DeviceType.DEVICE, deviceId, Evolution.ID);
+                ProtocolType.TCP_1_0, DeviceType.DEVICE,
+                deviceId, Evolution.ID);
         // push to mq
         publisher.sendMessage(Topics.DEVICE_EVENT, msg);
     }
@@ -132,12 +144,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
     @Override
     @SuppressWarnings("unchecked")
     public void executeActionMessage(RemoteDevice device, Message<Action> msg) {
-        // check payload
         Action action = msg.getPayload();
-        if (action == null) {
-            logger.warn("Action payload not provided, message {} dropped", msg.getMsgId());
-            return;
-        }
 
         // check action id
         if (!WeMoConst.ACTION_SWITCH_SET_STATE.equals(action.getActionId())) {
@@ -147,7 +154,7 @@ public class WeMoSwitchHandler implements WeMoHandler {
 
         // check state
         String state = String.valueOf(msg.getPayload().getAttributes().get(WeMoConst.ATTRIBUTE_SWITCH_STATE));
-        if (StringUtils.isBlank(state) || !(state.equals("1") || state.equals("0"))) {
+        if (!("1".equals(state) || "0".equals(state))) {
             logger.warn("Unknown state value {}, message {} dropped", state, msg.getMsgId());
             return;
         }
@@ -162,12 +169,12 @@ public class WeMoSwitchHandler implements WeMoHandler {
 
             @Override
             public void success(ActionInvocation invocation) {
-                logger.debug("Successful set device (switch) {} state to {}", msg.getTo(), state);
+                logger.info("Successful set device (switch) {} state to {}", msg.getTo(), state);
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                logger.debug("Failed to set device (switch) {} state to {}: {}", msg.getTo(), state, defaultMsg);
+                logger.info("Failed to set device (switch) {} state to {}: {}", msg.getTo(), state, defaultMsg);
             }
         };
 
