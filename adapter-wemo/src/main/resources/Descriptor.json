@@ -1,0 +1,41 @@
+{
+  "id": "",
+  "attributes": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "manufacturer",
+      "type": "string"
+    },
+    {
+      "name": "model",
+      "type": "string"
+    },
+    {
+      "name": "state",
+      "type": "enum",
+      "symbols": [
+        "0",
+        "1"
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "name": "state_changed",
+      "attributes": [
+        "state"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "set_state",
+      "attributes": [
+        "state"
+      ]
+    }
+  ]
+}
